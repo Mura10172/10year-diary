@@ -4,6 +4,7 @@ import DateNav from "@/components/DateNav";
 import TodayEntry from "@/components/TodayEntry";
 import PastEntries from "@/components/PastEntries";
 import MonthCalendars from "@/components/MonthCalendars";
+import RecentEntries from "@/components/RecentEntries";
 import { saveEntry, clearAllEntries } from "@/lib/storage";
 import { Entry } from "@/types";
 
@@ -67,21 +68,14 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="min-h-screen px-4 py-10 pb-20">
+    <main className="min-h-screen px-4 py-8 pb-20">
       <div className="max-w-[520px] mx-auto space-y-5">
-        {/* App title */}
-        <div className="text-center pb-2">
-          <h1 className="text-xs tracking-[0.3em] text-stone-400 font-light">
-            10年日記
-          </h1>
-          {syncing && (
-            <p className="text-[10px] text-stone-300 mt-1 animate-pulse">
-              データを読み込み中...
-            </p>
-          )}
-        </div>
+        {syncing && (
+          <p className="text-center text-[10px] text-stone-300 animate-pulse">
+            データを読み込み中...
+          </p>
+        )}
 
-        {/* Date navigation */}
         <DateNav
           date={date}
           onPrev={() => goTo(-1)}
@@ -89,14 +83,13 @@ export default function Home() {
           isToday={isToday}
         />
 
-        {/* Today's entry editor */}
         <TodayEntry date={date} onSaved={handleRefresh} refreshKey={refreshKey} />
 
-        {/* Past 10 years for same M/D */}
-        <PastEntries date={date} refreshKey={refreshKey} onRefresh={handleRefresh} />
+        <RecentEntries onSelect={handleSelect} refreshKey={refreshKey} />
 
-        {/* 3-month calendars */}
         <MonthCalendars date={date} onSelect={handleSelect} refreshKey={refreshKey} />
+
+        <PastEntries date={date} refreshKey={refreshKey} onRefresh={handleRefresh} />
       </div>
     </main>
   );

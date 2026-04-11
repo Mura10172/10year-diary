@@ -38,6 +38,10 @@ export function clearAllEntries(): void {
   setStore({});
 }
 
+export function getAllEntries(): Entry[] {
+  return Object.values(getStore());
+}
+
 export function deleteEntry(date: string): void {
   const store = getStore();
   delete store[date];

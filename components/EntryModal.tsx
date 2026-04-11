@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { saveEntry, deleteEntry } from "@/lib/storage";
+import { syncSave, syncDelete } from "@/lib/syncToSheets";
 import { useSpeech } from "@/hooks/useSpeech";
 import { formatJapanese } from "@/components/DateNav";
 import { Entry } from "@/types";
@@ -36,6 +37,7 @@ export default function EntryModal({
     stop();
     const updated: Entry = { ...entry, text: t, updatedAt: Date.now() };
     saveEntry(updated);
+    syncSave(updated);
     setEntry(updated);
     setEditing(false);
   };
@@ -43,6 +45,7 @@ export default function EntryModal({
   const handleDelete = () => {
     if (!confirm("この日記を削除しますか？")) return;
     deleteEntry(entry.date);
+    syncDelete(entry.date);
     stop();
     onClose();
   };

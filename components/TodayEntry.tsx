@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { getEntry, saveEntry, deleteEntry } from "@/lib/storage";
+import { syncSave, syncDelete } from "@/lib/syncToSheets";
 import { useSpeech } from "@/hooks/useSpeech";
 import { Entry } from "@/types";
 
@@ -45,6 +46,7 @@ export default function TodayEntry({
       updatedAt: now,
     };
     saveEntry(updated);
+    syncSave(updated);
     setEntry(updated);
     setText(t);
     setEditing(false);
@@ -62,6 +64,7 @@ export default function TodayEntry({
   const handleDelete = () => {
     if (!confirm("この日記を削除しますか？")) return;
     deleteEntry(date);
+    syncDelete(date);
     setEntry(null);
     setText("");
     setEditing(true);

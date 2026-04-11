@@ -1,9 +1,20 @@
 import { NextResponse } from "next/server";
 
+// "Sat Apr 11 2026..." や "2026-04-11" など様々な形式をYYYY-MM-DDに統一
+function toDateStr(val: string): string {
+  const d = new Date(val);
+  if (!isNaN(d.getTime())) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+  return val;
+}
+
 export async function GET() {
   const url = process.env.APPS_SCRIPT_URL;
 
-  // 未設定なら空配列を返す（アプリは localStorage で動作）
   if (!url) return NextResponse.json({ ok: true, entries: [] });
 
   try {
@@ -14,16 +25,22 @@ export async function GET() {
     });
     const text = await res.text();
     const data = JSON.parse(text);
-    console.log("[entries] fetched", data.entries?.length ?? 0, "entries from Sheets");
-    // 最初のエントリの日付を確認（デバッグ用）
-    if (data.entries?.length > 0) {
-      console.log("[entries] first entry date:", data.entries[0].date, "id:", data.entries[0].id);
+
+    // 日付形式を YYYY-MM-DD に統一
+    const entries = (data.entries ?? []).map((entry: Record<string, unknown>) => {
+      const date = toDateStr(String(entry.date ?? ""));
+      return { ...entry, id: date, date };
+    });
+
+    console.log("[entries] fetched", entries.length, "entries from Sheets");
+    if (entries.length > 0) {
+      console.log("[entries] first entry date (normalized):", entries[0].date);
     }
-    return NextResponse.json(data);
+
+    return NextResponse.json({ ok: true, entries });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[entries] fetch error:", message);
-    // 失敗しても localStorage のデータで動作継続
     return NextResponse.json({ ok: true, entries: [] });
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { getEntriesForMonthDay } from "@/lib/storage";
+import { getEntry } from "@/lib/storage";
 import { Entry } from "@/types";
 import EntryModal from "@/components/EntryModal";
 
@@ -9,29 +9,32 @@ function getSummary(text: string, maxLen = 75): string {
   return oneLiner.length > maxLen ? oneLiner.slice(0, maxLen) + "…" : oneLiner;
 }
 
+type PastItem = { year: number; dateStr: string; entry: Entry | null };
+
 export default function PastEntries({
   date,
   refreshKey,
+  onRefresh,
 }: {
   date: string;
   refreshKey: number;
+  onRefresh?: () => void;
 }) {
-  const [entries, setEntries] = useState<Entry[]>([]);
+  const [items, setItems] = useState<PastItem[]>([]);
   const [selected, setSelected] = useState<Entry | null>(null);
-  const [modalRefresh, setModalRefresh] = useState(0);
 
   const currentYear = parseInt(date.split("-")[0]);
 
   useEffect(() => {
     const [, m, d] = date.split("-").map(Number);
-    const past = getEntriesForMonthDay(m, d)
-      .filter((e) => parseInt(e.date.split("-")[0]) !== currentYear)
-      .sort((a, b) => b.date.localeCompare(a.date));
-    setEntries(past);
+    const list = Array.from({ length: 10 }, (_, i) => {
+      const year = currentYear - 1 - i;
+      const dateStr = `${year}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      return { year, dateStr, entry: getEntry(dateStr) ?? null };
+    });
+    setItems(list);
     setSelected(null);
-  }, [date, currentYear, refreshKey, modalRefresh]);
-
-  if (entries.length === 0) return null;
+  }, [date, currentYear, refreshKey]);
 
   return (
     <>
@@ -45,12 +48,11 @@ export default function PastEntries({
         </div>
 
         <div className="space-y-2">
-          {entries.map((entry) => {
-            const year = parseInt(entry.date.split("-")[0]);
+          {items.map(({ year, dateStr, entry }) => {
             const yearsAgo = currentYear - year;
-            return (
+            return entry ? (
               <button
-                key={entry.id}
+                key={dateStr}
                 onClick={() => setSelected(entry)}
                 className="w-full text-left bg-white rounded-2xl px-4 py-3.5 border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all duration-150 group"
               >
@@ -66,6 +68,14 @@ export default function PastEntries({
                   {getSummary(entry.text)}
                 </p>
               </button>
+            ) : (
+              <div
+                key={dateStr}
+                className="flex items-center justify-between px-4 py-3 bg-white/60 rounded-2xl border border-stone-50"
+              >
+                <span className="text-xs text-stone-300">{year}年</span>
+                <span className="text-xs text-stone-200">—</span>
+              </div>
             );
           })}
         </div>
@@ -76,7 +86,7 @@ export default function PastEntries({
           entry={selected}
           onClose={() => {
             setSelected(null);
-            setModalRefresh((k) => k + 1);
+            onRefresh?.();
           }}
         />
       )}

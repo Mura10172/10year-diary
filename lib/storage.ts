@@ -39,3 +39,12 @@ export function deleteEntry(date: string): void {
   delete store[date];
   setStore(store);
 }
+
+export function getEntryDatesForMonth(year: number, month: number): Set<string> {
+  const prefix = `${year}-${String(month).padStart(2, "0")}`;
+  const dates = new Set<string>();
+  Object.keys(getStore()).forEach((date) => {
+    if (date.startsWith(prefix)) dates.add(date);
+  });
+  return dates;
+}

@@ -3,6 +3,7 @@ import { useState, useCallback } from "react";
 import DateNav from "@/components/DateNav";
 import TodayEntry from "@/components/TodayEntry";
 import PastEntries from "@/components/PastEntries";
+import MonthCalendars from "@/components/MonthCalendars";
 
 function todayStr(): string {
   const d = new Date();
@@ -25,8 +26,10 @@ function shiftDate(dateStr: string, days: number): string {
 
 export default function Home() {
   const [date, setDate] = useState(todayStr);
-  const [pastRefresh, setPastRefresh] = useState(0);
+  const [refreshKey, setRefreshKey] = useState(0);
   const isToday = date === todayStr();
+
+  const handleRefresh = useCallback(() => setRefreshKey((k) => k + 1), []);
 
   const goTo = useCallback(
     (days: number) => {
@@ -35,6 +38,10 @@ export default function Home() {
     },
     [date]
   );
+
+  const handleSelect = useCallback((d: string) => {
+    if (d <= todayStr()) setDate(d);
+  }, []);
 
   return (
     <main className="min-h-screen px-4 py-10 pb-20">
@@ -55,13 +62,13 @@ export default function Home() {
         />
 
         {/* Today's entry editor */}
-        <TodayEntry
-          date={date}
-          onSaved={() => setPastRefresh((k) => k + 1)}
-        />
+        <TodayEntry date={date} onSaved={handleRefresh} />
 
-        {/* Past years' entries for same M/D */}
-        <PastEntries date={date} refreshKey={pastRefresh} />
+        {/* Past 10 years for same M/D */}
+        <PastEntries date={date} refreshKey={refreshKey} onRefresh={handleRefresh} />
+
+        {/* 3-month calendars */}
+        <MonthCalendars date={date} onSelect={handleSelect} refreshKey={refreshKey} />
       </div>
     </main>
   );

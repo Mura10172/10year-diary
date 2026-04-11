@@ -4,7 +4,7 @@ import DateNav from "@/components/DateNav";
 import TodayEntry from "@/components/TodayEntry";
 import PastEntries from "@/components/PastEntries";
 import MonthCalendars from "@/components/MonthCalendars";
-import { saveEntry } from "@/lib/storage";
+import { saveEntry, clearAllEntries } from "@/lib/storage";
 import { Entry } from "@/types";
 
 function todayStr(): string {
@@ -38,7 +38,8 @@ export default function Home() {
       try {
         const res = await fetch("/api/entries");
         const data = await res.json();
-        if (data.ok && Array.isArray(data.entries) && data.entries.length > 0) {
+        if (data.ok && Array.isArray(data.entries)) {
+          clearAllEntries();
           data.entries.forEach((entry: Entry) => saveEntry(entry));
           setRefreshKey((k) => k + 1);
         }

@@ -34,6 +34,10 @@ export function saveEntry(entry: Entry): void {
   setStore(store);
 }
 
+export function clearAllEntries(): void {
+  setStore({});
+}
+
 export function deleteEntry(date: string): void {
   const store = getStore();
   delete store[date];

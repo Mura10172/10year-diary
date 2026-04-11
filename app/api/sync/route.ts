@@ -19,7 +19,12 @@ export async function POST(req: Request) {
     // レスポンスをまずテキストで受け取り、JSONかどうか確認する
     const text = await res.text();
     console.log("[sync] response status:", res.status);
-    console.log("[sync] response body:", text.slice(0, 300));
+    // HTMLエラーページのエラー文を抽出して出力
+    const errorMatch = text.match(/<div[^>]*class="errorMessage"[^>]*>(.*?)<\/div>/s)
+      ?? text.match(/<title>(.*?)<\/title>/);
+    const errorHint = errorMatch ? errorMatch[1].replace(/<[^>]+>/g, "").trim() : "";
+    console.log("[sync] response body (raw):", text.slice(0, 500));
+    console.log("[sync] error hint:", errorHint || "（抽出できず）");
 
     try {
       const data = JSON.parse(text);

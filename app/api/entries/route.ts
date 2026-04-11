@@ -15,6 +15,10 @@ export async function GET() {
     const text = await res.text();
     const data = JSON.parse(text);
     console.log("[entries] fetched", data.entries?.length ?? 0, "entries from Sheets");
+    // 最初のエントリの日付を確認（デバッグ用）
+    if (data.entries?.length > 0) {
+      console.log("[entries] first entry date:", data.entries[0].date, "id:", data.entries[0].id);
+    }
     return NextResponse.json(data);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

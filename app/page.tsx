@@ -1,9 +1,11 @@
 "use client";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import DateNav from "@/components/DateNav";
 import TodayEntry from "@/components/TodayEntry";
 import PastEntries from "@/components/PastEntries";
 import MonthCalendars from "@/components/MonthCalendars";
+import { saveEntry } from "@/lib/storage";
+import { Entry } from "@/types";
 
 function todayStr(): string {
   const d = new Date();
@@ -27,7 +29,27 @@ function shiftDate(dateStr: string, days: number): string {
 export default function Home() {
   const [date, setDate] = useState(todayStr);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [syncing, setSyncing] = useState(true);
   const isToday = date === todayStr();
+
+  // 起動時に Google Sheets から全データを読み込む
+  useEffect(() => {
+    async function loadFromSheets() {
+      try {
+        const res = await fetch("/api/entries");
+        const data = await res.json();
+        if (data.ok && Array.isArray(data.entries) && data.entries.length > 0) {
+          data.entries.forEach((entry: Entry) => saveEntry(entry));
+          setRefreshKey((k) => k + 1);
+        }
+      } catch {
+        // 失敗しても localStorage のデータで動作継続
+      } finally {
+        setSyncing(false);
+      }
+    }
+    loadFromSheets();
+  }, []);
 
   const handleRefresh = useCallback(() => setRefreshKey((k) => k + 1), []);
 
@@ -51,6 +73,11 @@ export default function Home() {
           <h1 className="text-xs tracking-[0.3em] text-stone-400 font-light">
             10年日記
           </h1>
+          {syncing && (
+            <p className="text-[10px] text-stone-300 mt-1 animate-pulse">
+              データを読み込み中...
+            </p>
+          )}
         </div>
 
         {/* Date navigation */}

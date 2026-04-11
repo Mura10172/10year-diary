@@ -89,7 +89,7 @@ export default function Home() {
         />
 
         {/* Today's entry editor */}
-        <TodayEntry date={date} onSaved={handleRefresh} />
+        <TodayEntry date={date} onSaved={handleRefresh} refreshKey={refreshKey} />
 
         {/* Past 10 years for same M/D */}
         <PastEntries date={date} refreshKey={refreshKey} onRefresh={handleRefresh} />

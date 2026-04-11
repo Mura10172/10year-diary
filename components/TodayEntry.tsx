@@ -8,9 +8,11 @@ import { Entry } from "@/types";
 export default function TodayEntry({
   date,
   onSaved,
+  refreshKey,
 }: {
   date: string;
   onSaved?: () => void;
+  refreshKey?: number;
 }) {
   const [entry, setEntry] = useState<Entry | null>(null);
   const [text, setText] = useState("");
@@ -23,7 +25,8 @@ export default function TodayEntry({
     setEntry(e);
     setText(e?.text ?? "");
     setEditing(!e);
-  }, [date, stop]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [date, stop, refreshKey]);
 
   const handleVoice = () => {
     if (listening) {

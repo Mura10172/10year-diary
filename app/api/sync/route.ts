@@ -20,11 +20,10 @@ export async function POST(req: Request) {
     const text = await res.text();
     console.log("[sync] response status:", res.status);
     // HTMLエラーページのエラー文を抽出して出力
-    const errorMatch = text.match(/<div[^>]*class="errorMessage"[^>]*>(.*?)<\/div>/s)
-      ?? text.match(/<title>(.*?)<\/title>/);
-    const errorHint = errorMatch ? errorMatch[1].replace(/<[^>]+>/g, "").trim() : "";
+    const errorMatch = text.match(/<title>(.*?)<\/title>/);
+    const errorHint = errorMatch ? errorMatch[1].trim() : "（抽出できず）";
     console.log("[sync] response body (raw):", text.slice(0, 500));
-    console.log("[sync] error hint:", errorHint || "（抽出できず）");
+    console.log("[sync] error hint:", errorHint);
 
     try {
       const data = JSON.parse(text);

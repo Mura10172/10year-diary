@@ -95,7 +95,7 @@ export default function RecentEntries({
               <p className="text-[10px] text-stone-400 mb-1.5">
                 {y}年{m}月{d}日
               </p>
-              <p className="text-xs text-stone-500 leading-relaxed h-[4.5rem] overflow-hidden">
+              <p className="text-xs text-stone-500 leading-relaxed h-[7rem] overflow-hidden">
                 {entry.text}
               </p>
             </button>

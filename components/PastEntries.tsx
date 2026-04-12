@@ -98,7 +98,7 @@ export default function PastEntries({
                     {yearsAgo}年前
                   </span>
                 </div>
-                <p className="text-xs text-stone-400 leading-relaxed h-[4.5rem] overflow-hidden">
+                <p className="text-xs text-stone-400 leading-relaxed h-[7rem] overflow-hidden">
                   {entry.text}
                 </p>
               </button>
@@ -107,10 +107,12 @@ export default function PastEntries({
                 key={dateStr}
                 className="flex flex-col px-3 py-3 bg-white/60 rounded-2xl border border-stone-50"
               >
-                <span className="text-[10px] text-stone-300 mb-1">
+                <span className="text-[10px] text-stone-300 mb-1.5">
                   {year}年
                 </span>
-                <span className="text-xs text-stone-200">—</span>
+                <div className="h-[7rem] flex items-center">
+                  <span className="text-xs text-stone-200">—</span>
+                </div>
               </div>
             );
           })}

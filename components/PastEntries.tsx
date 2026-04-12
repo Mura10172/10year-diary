@@ -102,15 +102,17 @@ export default function PastEntries({
 
   const translateX = `calc(-${currentIdx * 50}% + ${dragDelta}px)`;
 
-  function entryLabel(entry: Entry) {
-    const [, em, ed] = entry.date.split("-").map(Number);
-    return `${em}月${ed}日`;
-  }
+  function renderCol(col: ColData | undefined, colKey: string) {
+    if (!col) return <div key={colKey} style={{ minWidth: "50%", padding: "0 4px" }} />;
 
-  function ColContent({ col, colKey }: { col: ColData; colKey: string }) {
     const { year, entry } = col;
+    const label = entry
+      ? (() => { const [, em, ed] = entry.date.split("-").map(Number); return `${em}月${ed}日`; })()
+      : "";
+
     return (
       <div key={colKey} style={{ minWidth: "50%", padding: "0 4px" }} className="flex flex-col gap-2">
+        {/* 投稿１ */}
         {entry ? (
           <button
             onClick={() => setSelected(entry)}
@@ -118,11 +120,9 @@ export default function PastEntries({
           >
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-[10px] font-medium text-stone-500">
-                {year}年{entryLabel(entry)}
+                {year}年{label}
               </span>
-              <span className="text-[10px] text-stone-300">
-                {currentYear - year}年前
-              </span>
+              <span className="text-[10px] text-stone-300">{currentYear - year}年前</span>
             </div>
             <p className="text-xs text-stone-400 leading-relaxed h-[7rem] overflow-hidden">
               {entry.text}
@@ -136,6 +136,7 @@ export default function PastEntries({
             </div>
           </div>
         )}
+        {/* 投稿２ */}
         {entry?.text2 ? (
           <button
             onClick={() => setSelected(entry)}
@@ -143,11 +144,9 @@ export default function PastEntries({
           >
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-[10px] font-medium text-stone-500">
-                {year}年{entryLabel(entry)}
+                {year}年{label}
               </span>
-              <span className="text-[10px] text-stone-300">
-                {currentYear - year}年前
-              </span>
+              <span className="text-[10px] text-stone-300">{currentYear - year}年前</span>
             </div>
             <p className="text-xs text-stone-300 leading-relaxed h-[7rem] overflow-hidden">
               {entry.text2}
@@ -202,10 +201,8 @@ export default function PastEntries({
             onTouchEnd={handleTouchEnd}
             onTransitionEnd={() => setIsAnimating(false)}
           >
-            {cols.map((col, i) => (
-              <ColContent key={i} col={col} colKey={String(i)} />
-            ))}
-            <div style={{ minWidth: "50%", padding: "0 4px" }} />
+            {cols.map((col, i) => renderCol(col, String(i)))}
+            {renderCol(undefined, "__trail")}
           </div>
         </div>
       </section>

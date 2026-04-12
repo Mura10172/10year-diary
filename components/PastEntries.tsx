@@ -143,7 +143,7 @@ export default function PastEntries({
       el.removeEventListener("touchmove", onMove);
       el.removeEventListener("touchend", onEnd);
     };
-  }, []);
+  }, [pages.length]); // re-run when pages first loads so trackRef.current is available
 
 
 

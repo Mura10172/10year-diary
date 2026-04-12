@@ -16,7 +16,7 @@ export default function SideMenu({
 
   useEffect(() => {
     const entries = getAllEntries().sort((a, b) => b.date.localeCompare(a.date));
-    const uniqueYms = [...new Set(entries.map((e) => e.date.slice(0, 7)))].sort(
+    const uniqueYms = Array.from(new Set(entries.map((e) => e.date.slice(0, 7)))).sort(
       (a, b) => b.localeCompare(a)
     );
     setYms(uniqueYms);

@@ -175,8 +175,8 @@ export default function PastEntries({
           <div className="flex-1 h-px bg-stone-100" />
           <div className="flex items-center gap-2">
             <button
-              onClick={() => { setIsAnimating(true); setCurrentPage((p) => p - 1); }}
-              disabled={!canNewer}
+              onClick={() => { setIsAnimating(true); setCurrentPage((p) => p + 1); }}
+              disabled={!canOlder}
               className="w-5 h-5 flex items-center justify-center text-stone-300 hover:text-stone-500 disabled:opacity-30 text-sm leading-none"
             >
               ‹
@@ -185,8 +185,8 @@ export default function PastEntries({
               過去のこの日に近い投稿
             </p>
             <button
-              onClick={() => { setIsAnimating(true); setCurrentPage((p) => p + 1); }}
-              disabled={!canOlder}
+              onClick={() => { setIsAnimating(true); setCurrentPage((p) => p - 1); }}
+              disabled={!canNewer}
               className="w-5 h-5 flex items-center justify-center text-stone-300 hover:text-stone-500 disabled:opacity-30 text-sm leading-none"
             >
               ›
@@ -201,6 +201,7 @@ export default function PastEntries({
               display: "flex",
               transform: `translateX(${translateX})`,
               transition: isAnimating ? "transform 0.3s ease" : "none",
+              touchAction: "pan-y",
             }}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}

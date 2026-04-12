@@ -16,11 +16,13 @@ export default function DateNav({
   date,
   onPrev,
   onNext,
+  onToday,
   isToday,
 }: {
   date: string;
   onPrev: () => void;
   onNext: () => void;
+  onToday: () => void;
   isToday: boolean;
 }) {
   return (
@@ -34,9 +36,12 @@ export default function DateNav({
       </button>
 
       <div className="text-center">
-        <p className="text-base font-light tracking-wide text-stone-700">
+        <button
+          onClick={onToday}
+          className="text-base font-light tracking-wide text-stone-700 hover:text-stone-500 transition-colors"
+        >
           {formatJapanese(date)}
-        </p>
+        </button>
         <p className="text-xs mt-0.5 h-4">
           {isToday && (
             <span className="text-amber-500 tracking-widest font-medium">今日</span>

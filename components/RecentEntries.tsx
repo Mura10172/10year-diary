@@ -19,9 +19,11 @@ function getSummary(text: string, maxLen = 55): string {
 }
 
 export default function RecentEntries({
+  date,
   onSelect,
   refreshKey,
 }: {
+  date: string;
   onSelect: (date: string) => void;
   refreshKey: number;
 }) {
@@ -34,8 +36,14 @@ export default function RecentEntries({
       .filter((e) => e.date <= today)
       .sort((a, b) => b.date.localeCompare(a.date));
     setEntries(list);
-    setOffset(0);
   }, [refreshKey]);
+
+  // dateが変わったら該当日付以前で最も近いエントリにスライド
+  useEffect(() => {
+    if (entries.length === 0) return;
+    const idx = entries.findIndex((e) => e.date <= date);
+    setOffset(idx >= 0 ? idx : 0);
+  }, [date, entries]);
 
   const visible = entries.slice(offset, offset + 2);
   const canPrev = offset + 2 < entries.length;
@@ -87,8 +95,8 @@ export default function RecentEntries({
               <p className="text-[10px] text-stone-400 mb-1.5">
                 {y}年{m}月{d}日
               </p>
-              <p className="text-xs text-stone-500 leading-relaxed">
-                {getSummary(entry.text)}
+              <p className="text-xs text-stone-500 leading-relaxed h-[4.5rem] overflow-hidden">
+                {entry.text}
               </p>
             </button>
           );

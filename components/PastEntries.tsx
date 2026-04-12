@@ -98,8 +98,8 @@ export default function PastEntries({
                     {yearsAgo}年前
                   </span>
                 </div>
-                <p className="text-xs text-stone-400 leading-relaxed">
-                  {getSummary(entry.text)}
+                <p className="text-xs text-stone-400 leading-relaxed h-[4.5rem] overflow-hidden">
+                  {entry.text}
                 </p>
               </button>
             ) : (

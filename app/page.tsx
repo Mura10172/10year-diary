@@ -80,12 +80,13 @@ export default function Home() {
           date={date}
           onPrev={() => goTo(-1)}
           onNext={() => goTo(1)}
+          onToday={() => setDate(todayStr())}
           isToday={isToday}
         />
 
         <TodayEntry date={date} onSaved={handleRefresh} refreshKey={refreshKey} />
 
-        <RecentEntries onSelect={handleSelect} refreshKey={refreshKey} />
+        <RecentEntries date={date} onSelect={handleSelect} refreshKey={refreshKey} />
 
         <MonthCalendars date={date} onSelect={handleSelect} refreshKey={refreshKey} />
 

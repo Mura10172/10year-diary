@@ -7,7 +7,8 @@ export function useSpeech() {
   const [supported, setSupported] = useState(false);
   const recRef = useRef<any>(null);
   const callbackRef = useRef<((text: string) => void) | null>(null);
-  const lastFinalIndexRef = useRef(-1);
+  const lastFinalTextRef = useRef("");
+  const lastFinalTimeRef = useRef(0);
 
   useEffect(() => {
     const SR =
@@ -26,11 +27,18 @@ export function useSpeech() {
       let interimText = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
         if (e.results[i].isFinal) {
-          // 同じ index を重複処理しないようにガード（モバイルで2回発火する問題対策）
-          if (i > lastFinalIndexRef.current) {
-            final += e.results[i][0].transcript;
-            lastFinalIndexRef.current = i;
+          const transcript = e.results[i][0].transcript;
+          const now = Date.now();
+          // 1.5秒以内に同じテキストが来たら重複とみなしスキップ
+          if (
+            transcript.trim() === lastFinalTextRef.current.trim() &&
+            now - lastFinalTimeRef.current < 1500
+          ) {
+            continue;
           }
+          final += transcript;
+          lastFinalTextRef.current = transcript;
+          lastFinalTimeRef.current = now;
         } else {
           interimText += e.results[i][0].transcript;
         }
@@ -61,7 +69,8 @@ export function useSpeech() {
 
   const start = useCallback((onFinal: (text: string) => void) => {
     callbackRef.current = onFinal;
-    lastFinalIndexRef.current = -1; // 開始時にリセット
+    lastFinalTextRef.current = "";
+    lastFinalTimeRef.current = 0;
     try {
       recRef.current?.start();
       setListening(true);

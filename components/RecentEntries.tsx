@@ -21,10 +21,10 @@ export default function RecentEntries({
   onSelect: (date: string) => void;
   refreshKey: number;
 }) {
+  // entries: newest first
   const [entries, setEntries] = useState<Entry[]>([]);
-  const [currentPage, setCurrentPage] = useState(0);
-
-  // Touch / drag state
+  // currentIdx: index into trackEntries (oldest-first). right-swipe → older (idx--)
+  const [currentIdx, setCurrentIdx] = useState(0);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [dragDelta, setDragDelta] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -37,22 +37,25 @@ export default function RecentEntries({
     setEntries(list);
   }, [refreshKey]);
 
-  // Group entries into pages of 2
-  const pages: Entry[][] = [];
-  for (let i = 0; i < entries.length; i += 2) {
-    pages.push(entries.slice(i, i + 2));
-  }
+  // Track is oldest-first so that dragging right reveals older content naturally
+  const trackEntries = [...entries].reverse();
 
-  // When date changes, move to the page containing the closest entry
+  // Sync currentIdx: prefer the entry matching `date`, else show newest pair
   useEffect(() => {
     if (entries.length === 0) return;
-    const idx = entries.findIndex((e) => e.date <= date);
-    const targetPage = idx >= 0 ? Math.floor(idx / 2) : 0;
-    setCurrentPage(targetPage);
+    const fwdIdx = entries.findIndex((e) => e.date <= date);
+    if (fwdIdx >= 0) {
+      const trackIdx = entries.length - 1 - fwdIdx;
+      setCurrentIdx(Math.max(0, trackIdx));
+    } else {
+      setCurrentIdx(Math.max(0, entries.length - 2));
+    }
   }, [date, entries]);
 
-  const canOlder = currentPage < pages.length - 1;
-  const canNewer = currentPage > 0;
+  // canOlder: can move left in the track (lower index = older)
+  const canOlder = currentIdx > 0;
+  // canNewer: can move right in the track (higher index = newer)
+  const canNewer = currentIdx < trackEntries.length - 1;
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStartX(e.touches[0].clientX);
@@ -62,35 +65,71 @@ export default function RecentEntries({
   const handleTouchMove = (e: React.TouchEvent) => {
     if (touchStartX === null) return;
     const delta = e.touches[0].clientX - touchStartX;
-    // Clamp drag so you can't pull past edge pages
-    if (!canOlder && delta < 0) setDragDelta(delta * 0.2);
-    else if (!canNewer && delta > 0) setDragDelta(delta * 0.2);
+    // Rubber-band at edges
+    if (!canOlder && delta > 0) setDragDelta(delta * 0.2);
+    else if (!canNewer && delta < 0) setDragDelta(delta * 0.2);
     else setDragDelta(delta);
   };
 
   const handleTouchEnd = () => {
     if (touchStartX === null) return;
     setIsAnimating(true);
-    if (dragDelta < -50 && canOlder) {
-      setCurrentPage((p) => p + 1);
-    } else if (dragDelta > 50 && canNewer) {
-      setCurrentPage((p) => p - 1);
-    }
+    if (dragDelta > 50 && canOlder) setCurrentIdx((i) => i - 1);      // right = older
+    else if (dragDelta < -50 && canNewer) setCurrentIdx((i) => i + 1); // left  = newer
     setDragDelta(0);
     setTouchStartX(null);
   };
 
   if (entries.length === 0) return null;
 
-  const translateX = `calc(${-currentPage * 100}% + ${dragDelta}px)`;
+  // translateX: each entry column is 50% of the container width
+  const translateX = `calc(-${currentIdx * 50}% + ${dragDelta}px)`;
+
+  function renderCol(entry: Entry | undefined, colKey: string) {
+    if (!entry) return <div key={colKey} style={{ minWidth: "50%", padding: "0 4px" }} />;
+    const [y, m, d] = entry.date.split("-").map(Number);
+    const label = `${y}年${m}月${d}日`;
+    return (
+      <div key={colKey} style={{ minWidth: "50%", padding: "0 4px" }} className="flex flex-col gap-2">
+        {/* 投稿１ */}
+        <button
+          onClick={() => onSelect(entry.date)}
+          className="text-left bg-white rounded-2xl px-3 py-3 border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all duration-150"
+        >
+          <p className="text-[10px] text-stone-400 mb-1.5">{label}</p>
+          <p className="text-xs text-stone-500 leading-relaxed h-[7rem] overflow-hidden">
+            {entry.text}
+          </p>
+        </button>
+        {/* 投稿２ or blank */}
+        {entry.text2 ? (
+          <button
+            onClick={() => onSelect(entry.date)}
+            className="text-left bg-white rounded-2xl px-3 py-3 border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all duration-150"
+          >
+            <p className="text-[10px] text-stone-400 mb-1.5">{label}</p>
+            <p className="text-xs text-stone-400 leading-relaxed h-[7rem] overflow-hidden">
+              {entry.text2}
+            </p>
+          </button>
+        ) : (
+          <div className="bg-white/40 rounded-2xl border border-stone-50 px-3 py-3">
+            <div style={{ visibility: "hidden" }} className="text-[10px] mb-1.5">x</div>
+            <div className="h-[7rem]" />
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <section>
       <div className="flex items-center gap-3 mb-2">
         <div className="flex-1 h-px bg-stone-100" />
         <div className="flex items-center gap-2">
+          {/* ‹ = older (go left in track = smaller idx) */}
           <button
-            onClick={() => { setIsAnimating(true); setCurrentPage((p) => p + 1); }}
+            onClick={() => { setIsAnimating(true); setCurrentIdx((i) => i - 1); }}
             disabled={!canOlder}
             className="w-5 h-5 flex items-center justify-center text-stone-300 hover:text-stone-500 disabled:opacity-30 text-sm leading-none"
           >
@@ -99,8 +138,9 @@ export default function RecentEntries({
           <p className="text-xs text-stone-300 tracking-widest whitespace-nowrap">
             直近の投稿
           </p>
+          {/* › = newer (go right in track = larger idx) */}
           <button
-            onClick={() => { setIsAnimating(true); setCurrentPage((p) => p - 1); }}
+            onClick={() => { setIsAnimating(true); setCurrentIdx((i) => i + 1); }}
             disabled={!canNewer}
             className="w-5 h-5 flex items-center justify-center text-stone-300 hover:text-stone-500 disabled:opacity-30 text-sm leading-none"
           >
@@ -110,7 +150,6 @@ export default function RecentEntries({
         <div className="flex-1 h-px bg-stone-100" />
       </div>
 
-      {/* Carousel container */}
       <div style={{ overflow: "hidden" }}>
         <div
           style={{
@@ -123,49 +162,9 @@ export default function RecentEntries({
           onTouchEnd={handleTouchEnd}
           onTransitionEnd={() => setIsAnimating(false)}
         >
-          {pages.map((pagePair, pageIdx) => (
-            <div
-              key={pageIdx}
-              style={{ minWidth: "100%" }}
-              className="grid grid-cols-2 gap-2"
-            >
-              {pagePair.flatMap((entry) => {
-                const [y, m, d] = entry.date.split("-").map(Number);
-                const label = `${y}年${m}月${d}日`;
-                return [
-                  // Post1 cell
-                  <button
-                    key={`${entry.date}-1`}
-                    onClick={() => onSelect(entry.date)}
-                    className="text-left bg-white rounded-2xl px-3 py-3 border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all duration-150"
-                  >
-                    <p className="text-[10px] text-stone-400 mb-1.5">{label}</p>
-                    <p className="text-xs text-stone-500 leading-relaxed h-[7rem] overflow-hidden">
-                      {entry.text}
-                    </p>
-                  </button>,
-                  // Post2 cell (blank if missing)
-                  entry.text2 ? (
-                    <button
-                      key={`${entry.date}-2`}
-                      onClick={() => onSelect(entry.date)}
-                      className="text-left bg-white rounded-2xl px-3 py-3 border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all duration-150"
-                    >
-                      <p className="text-[10px] text-stone-400 mb-1.5">{label}</p>
-                      <p className="text-xs text-stone-400 leading-relaxed h-[7rem] overflow-hidden">
-                        {entry.text2}
-                      </p>
-                    </button>
-                  ) : (
-                    <div
-                      key={`${entry.date}-2`}
-                      className="rounded-2xl border border-stone-50 bg-white/40"
-                    />
-                  ),
-                ];
-              })}
-            </div>
-          ))}
+          {trackEntries.map((entry, i) => renderCol(entry, entry.date))}
+          {/* Trailing blank so the last entry always has a right neighbor */}
+          {renderCol(undefined, "__trail")}
         </div>
       </div>
     </section>

@@ -4,6 +4,7 @@ import { getEntry, saveEntry, deleteEntry } from "@/lib/storage";
 import { syncSave, syncDelete } from "@/lib/syncToSheets";
 import { useSpeech } from "@/hooks/useSpeech";
 import { Entry } from "@/types";
+import { uploadPhoto } from "@/lib/uploadPhoto";
 
 export default function TodayEntry({
   date,
@@ -35,8 +36,13 @@ export default function TodayEntry({
     setText2(e?.text2 ?? "");
     setEditing1(!e?.text);
     setEditing2(!e?.text2);
+    setPhotos(e?.photos ?? []);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [date, refreshKey]);
+
+  // Photos state
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
 
   // --- Section 1 handlers ---
   const handleVoice1 = () => {
@@ -56,6 +62,7 @@ export default function TodayEntry({
       text2: entry?.text2,
       starred1: entry?.starred1,
       starred2: entry?.starred2,
+      photos: photos.length > 0 ? photos : undefined,
       createdAt: entry?.createdAt ?? now,
       updatedAt: now,
     };
@@ -111,6 +118,7 @@ export default function TodayEntry({
       text2: t || undefined,
       starred1: entry?.starred1,
       starred2: t ? entry?.starred2 : undefined,
+      photos: photos.length > 0 ? photos : undefined,
       createdAt: entry?.createdAt ?? now,
       updatedAt: now,
     };
@@ -152,6 +160,51 @@ export default function TodayEntry({
     saveEntry(updated);
     syncSave(updated);
     setEntry(updated);
+  };
+
+  const handlePhotoAdd = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
+    setUploading(true);
+    try {
+      const urls = await Promise.all(files.map(uploadPhoto));
+      const newPhotos = [...photos, ...urls];
+      setPhotos(newPhotos);
+      // Save immediately with new photos
+      const now = Date.now();
+      const updated: Entry = {
+        id: entry?.id ?? crypto.randomUUID(),
+        date,
+        text: entry?.text ?? "",
+        text2: entry?.text2,
+        starred1: entry?.starred1,
+        starred2: entry?.starred2,
+        photos: newPhotos,
+        createdAt: entry?.createdAt ?? now,
+        updatedAt: now,
+      };
+      saveEntry(updated);
+      syncSave(updated);
+      setEntry(updated);
+      onSaved?.();
+    } catch {
+      alert("写真のアップロードに失敗しました");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  };
+
+  const handlePhotoRemove = (idx: number) => {
+    const newPhotos = photos.filter((_, i) => i !== idx);
+    setPhotos(newPhotos);
+    if (entry) {
+      const updated: Entry = { ...entry, photos: newPhotos.length > 0 ? newPhotos : undefined, updatedAt: Date.now() };
+      saveEntry(updated);
+      syncSave(updated);
+      setEntry(updated);
+      onSaved?.();
+    }
   };
 
   return (
@@ -295,6 +348,44 @@ export default function TodayEntry({
             </div>
           </div>
         )}
+      </div>
+      {/* Photos section */}
+      <div className="h-px bg-stone-50" />
+      <div>
+        {photos.length > 0 && (
+          <div className="grid grid-cols-3 gap-2 mb-3">
+            {photos.map((url, i) => (
+              <div key={i} className="relative group">
+                <img
+                  src={url}
+                  alt={`写真${i + 1}`}
+                  className="w-full aspect-square object-cover rounded-xl border border-stone-100"
+                />
+                <button
+                  onClick={() => handlePhotoRemove(i)}
+                  className="absolute top-1 right-1 w-5 h-5 bg-black/50 text-white rounded-full text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <label className={`flex items-center gap-2 w-fit px-3 py-1.5 rounded-xl text-xs transition-all cursor-pointer ${uploading ? "bg-stone-50 text-stone-300" : "bg-stone-50 text-stone-400 hover:bg-stone-100 hover:text-stone-600"}`}>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          {uploading ? "アップロード中..." : "写真を追加"}
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={handlePhotoAdd}
+            disabled={uploading}
+          />
+        </label>
       </div>
     </div>
   );

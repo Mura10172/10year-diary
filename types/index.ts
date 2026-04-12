@@ -5,6 +5,7 @@ export type Entry = {
   text2?: string;
   starred1?: boolean;
   starred2?: boolean;
+  photos?: string[];
   createdAt: number;
   updatedAt: number;
 };

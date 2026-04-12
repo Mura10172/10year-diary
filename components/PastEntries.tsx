@@ -64,17 +64,18 @@ export default function PastEntries({
     const today = todayStr();
     const entries = getAllEntries().filter((e) => e.date < today);
     const built: ColData[] = [];
-    for (let p = 0; p < maxYears; p++) {
+    for (let p = maxYears - 1; p >= 0; p--) {
       const year = currentYear - 1 - p;
       const [left, right] = findTwoClosest(entries, year, m, d);
       built.push({ year, entry: left });
       built.push({ year, entry: right });
     }
     setCols(built);
+    setCurrentIdx(Math.max(0, built.length - 2));
   }, [date, refreshKey, currentYear, m, d]);
 
-  const canOlder = currentIdx < cols.length - 1;
-  const canNewer = currentIdx > 0;
+  const canOlder = currentIdx > 0;
+  const canNewer = currentIdx < cols.length - 1;
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStartX(e.touches[0].clientX);
@@ -84,16 +85,16 @@ export default function PastEntries({
   const handleTouchMove = (e: React.TouchEvent) => {
     if (touchStartX === null) return;
     const delta = e.touches[0].clientX - touchStartX;
-    if (!canOlder && delta < 0) setDragDelta(delta * 0.2);
-    else if (!canNewer && delta > 0) setDragDelta(delta * 0.2);
+    if (!canOlder && delta > 0) setDragDelta(delta * 0.2);
+    else if (!canNewer && delta < 0) setDragDelta(delta * 0.2);
     else setDragDelta(delta);
   };
 
   const handleTouchEnd = () => {
     if (touchStartX === null) return;
     setIsAnimating(true);
-    if (dragDelta < -50 && canOlder) setCurrentIdx((i) => i + 1);
-    else if (dragDelta > 50 && canNewer) setCurrentIdx((i) => i - 1);
+    if (dragDelta > 50 && canOlder) setCurrentIdx((i) => i - 1);    // right = older
+    else if (dragDelta < -50 && canNewer) setCurrentIdx((i) => i + 1); // left = newer
     setDragDelta(0);
     setTouchStartX(null);
   };
@@ -169,7 +170,7 @@ export default function PastEntries({
           <div className="flex-1 h-px bg-stone-100" />
           <div className="flex items-center gap-2">
             <button
-              onClick={() => { setIsAnimating(true); setCurrentIdx((i) => i + 1); }}
+              onClick={() => { setIsAnimating(true); setCurrentIdx((i) => i - 1); }}
               disabled={!canOlder}
               className="w-5 h-5 flex items-center justify-center text-stone-300 hover:text-stone-500 disabled:opacity-30 text-sm leading-none"
             >
@@ -179,7 +180,7 @@ export default function PastEntries({
               過去のこの日に近い投稿
             </p>
             <button
-              onClick={() => { setIsAnimating(true); setCurrentIdx((i) => i - 1); }}
+              onClick={() => { setIsAnimating(true); setCurrentIdx((i) => i + 1); }}
               disabled={!canNewer}
               className="w-5 h-5 flex items-center justify-center text-stone-300 hover:text-stone-500 disabled:opacity-30 text-sm leading-none"
             >

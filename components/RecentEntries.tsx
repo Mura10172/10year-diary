@@ -46,7 +46,7 @@ export default function RecentEntries({
     const fwdIdx = entries.findIndex((e) => e.date <= date);
     if (fwdIdx >= 0) {
       const trackIdx = entries.length - 1 - fwdIdx;
-      setCurrentIdx(Math.max(0, trackIdx));
+      setCurrentIdx(Math.max(0, trackIdx - 1));
     } else {
       setCurrentIdx(Math.max(0, entries.length - 2));
     }

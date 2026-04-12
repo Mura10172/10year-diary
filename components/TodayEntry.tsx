@@ -236,7 +236,7 @@ export default function TodayEntry({
             <textarea
               value={text2}
               onChange={(e) => setText2(e.target.value)}
-              placeholder="日記からの気づき..."
+              placeholder="その他..."
               className="w-full min-h-[100px] text-sm text-stone-700 leading-relaxed resize-none outline-none placeholder-stone-200"
             />
             {speech2.listening && speech2.interim && (

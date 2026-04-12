@@ -51,8 +51,8 @@ export default function RecentEntries({
 
   // フックは条件分岐より前に呼ぶ必要がある（Rules of Hooks）
   const { onTouchStart, onTouchEnd } = useSwipe(
-    () => { if (canPrev) setOffset((o) => o + 1); },
-    () => { if (canNext) setOffset((o) => o - 1); }
+    () => { if (canNext) setOffset((o) => o - 1); },
+    () => { if (canPrev) setOffset((o) => o + 1); }
   );
 
   if (entries.length === 0) return null;
@@ -63,8 +63,8 @@ export default function RecentEntries({
         <div className="flex-1 h-px bg-stone-100" />
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setOffset((o) => o + 1)}
-            disabled={!canPrev}
+            onClick={() => setOffset((o) => o - 1)}
+            disabled={!canNext}
             className="w-5 h-5 flex items-center justify-center text-stone-300 hover:text-stone-500 disabled:opacity-30 text-sm leading-none"
           >
             ‹
@@ -73,8 +73,8 @@ export default function RecentEntries({
             直近の投稿
           </p>
           <button
-            onClick={() => setOffset((o) => o - 1)}
-            disabled={!canNext}
+            onClick={() => setOffset((o) => o + 1)}
+            disabled={!canPrev}
             className="w-5 h-5 flex items-center justify-center text-stone-300 hover:text-stone-500 disabled:opacity-30 text-sm leading-none"
           >
             ›
@@ -83,7 +83,7 @@ export default function RecentEntries({
         <div className="flex-1 h-px bg-stone-100" />
       </div>
 
-      <div className="grid grid-cols-2 gap-2" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+      <div className="flex flex-col gap-2" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
         {visible.map((entry) => {
           const [y, m, d] = entry.date.split("-").map(Number);
           return (
@@ -98,10 +98,14 @@ export default function RecentEntries({
               <p className="text-xs text-stone-500 leading-relaxed h-[7rem] overflow-hidden">
                 {entry.text}
               </p>
+              {entry.text2 && (
+                <p className="text-xs text-stone-400 leading-relaxed h-[4rem] overflow-hidden mt-2 pt-2 border-t border-stone-50">
+                  {entry.text2}
+                </p>
+              )}
             </button>
           );
         })}
-        {visible.length === 1 && <div />}
       </div>
     </section>
   );

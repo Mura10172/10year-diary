@@ -15,7 +15,8 @@ export default function EntryModal({
 }) {
   const [entry, setEntry] = useState(initialEntry);
   const [editing, setEditing] = useState(false);
-  const [text, setText] = useState(initialEntry.text);
+  const [text1, setText1] = useState(initialEntry.text);
+  const [text2, setText2] = useState(initialEntry.text2 ?? "");
   const { listening, interim, supported, start, stop } = useSpeech();
 
   useEffect(() => {
@@ -28,14 +29,19 @@ export default function EntryModal({
 
   const handleVoice = () => {
     if (listening) stop();
-    else start((final) => setText((prev) => prev + final));
+    else start((final) => setText1((prev) => prev + final));
   };
 
   const handleSave = () => {
-    const t = text.trim();
-    if (!t) return;
+    const t = text1.trim();
     stop();
-    const updated: Entry = { ...entry, text: t, updatedAt: Date.now() };
+    const now = Date.now();
+    const updated: Entry = {
+      ...entry,
+      text: t,
+      text2: text2.trim() || undefined,
+      updatedAt: now,
+    };
     saveEntry(updated);
     syncSave(updated);
     setEntry(updated);
@@ -51,9 +57,24 @@ export default function EntryModal({
   };
 
   const handleCancelEdit = () => {
-    setText(entry.text);
+    setText1(entry.text);
+    setText2(entry.text2 ?? "");
     setEditing(false);
     stop();
+  };
+
+  const handleStar1 = () => {
+    const updated: Entry = { ...entry, starred1: !entry.starred1, updatedAt: Date.now() };
+    saveEntry(updated);
+    syncSave(updated);
+    setEntry(updated);
+  };
+
+  const handleStar2 = () => {
+    const updated: Entry = { ...entry, starred2: !entry.starred2, updatedAt: Date.now() };
+    saveEntry(updated);
+    syncSave(updated);
+    setEntry(updated);
   };
 
   return (
@@ -69,9 +90,7 @@ export default function EntryModal({
               {formatJapanese(entry.date)}
             </p>
             {entry.updatedAt !== entry.createdAt && (
-              <p className="text-xs text-stone-300 mt-0.5">
-                編集済み
-              </p>
+              <p className="text-xs text-stone-300 mt-0.5">編集済み</p>
             )}
           </div>
           <button
@@ -83,28 +102,55 @@ export default function EntryModal({
         </div>
 
         {/* Body */}
-        <div className="px-6 py-5 max-h-[60vh] overflow-y-auto">
+        <div className="px-6 py-5 max-h-[60vh] overflow-y-auto space-y-4">
           {editing ? (
-            <textarea
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              className="w-full min-h-[200px] text-sm text-stone-700 leading-[1.9] resize-none outline-none"
-              autoFocus
-            />
+            <>
+              <div>
+                <p className="text-[10px] text-stone-300 tracking-widest mb-2">日記</p>
+                <textarea
+                  value={text1}
+                  onChange={(e) => setText1(e.target.value)}
+                  className="w-full min-h-[140px] text-sm text-stone-700 leading-[1.9] resize-none outline-none"
+                  autoFocus
+                />
+                {listening && interim && (
+                  <p className="text-xs text-stone-300 italic mt-1">{interim}</p>
+                )}
+              </div>
+              <div className="h-px bg-stone-50" />
+              <div>
+                <p className="text-[10px] text-stone-300 tracking-widest mb-2">気づき</p>
+                <textarea
+                  value={text2}
+                  onChange={(e) => setText2(e.target.value)}
+                  placeholder="日記からの気づき..."
+                  className="w-full min-h-[80px] text-sm text-stone-600 leading-[1.9] resize-none outline-none placeholder-stone-200"
+                />
+              </div>
+            </>
           ) : (
-            <p className="text-sm text-stone-700 leading-[1.9] whitespace-pre-wrap">
-              {entry.text}
-            </p>
-          )}
-          {listening && interim && (
-            <p className="text-xs text-stone-300 italic mt-2">{interim}</p>
+            <>
+              <div>
+                <p className="text-[10px] text-stone-300 tracking-widest mb-2">日記</p>
+                <p className="text-sm text-stone-700 leading-[1.9] whitespace-pre-wrap">{entry.text}</p>
+              </div>
+              {entry.text2 && (
+                <>
+                  <div className="h-px bg-stone-50" />
+                  <div>
+                    <p className="text-[10px] text-stone-300 tracking-widest mb-2">気づき</p>
+                    <p className="text-sm text-stone-600 leading-[1.9] whitespace-pre-wrap">{entry.text2}</p>
+                  </div>
+                </>
+              )}
+            </>
           )}
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-6 pb-5 pt-3 border-t border-stone-50">
+        <div className="px-6 pb-5 pt-3 border-t border-stone-50">
           {editing ? (
-            <>
+            <div className="flex items-center justify-between">
               <div>
                 {supported && (
                   <button
@@ -129,28 +175,44 @@ export default function EntryModal({
                 </button>
                 <button
                   onClick={handleSave}
-                  disabled={!text.trim()}
+                  disabled={!text1.trim()}
                   className="px-4 py-1.5 bg-stone-800 text-white text-xs rounded-xl disabled:opacity-30 hover:bg-stone-700 active:scale-95 transition-all"
                 >
                   保存
                 </button>
               </div>
-            </>
+            </div>
           ) : (
-            <>
+            <div className="flex items-center justify-between">
               <button
                 onClick={handleDelete}
                 className="px-3 py-1.5 text-xs text-stone-300 hover:text-red-400 transition-colors"
               >
                 削除
               </button>
-              <button
-                onClick={() => setEditing(true)}
-                className="px-4 py-1.5 bg-stone-100 text-stone-600 text-xs rounded-xl hover:bg-stone-200 transition-all"
-              >
-                編集
-              </button>
-            </>
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] text-stone-300 mr-1">日記</span>
+                <button
+                  onClick={handleStar1}
+                  className={`px-2 py-1.5 text-sm transition-colors ${entry.starred1 ? "text-amber-400" : "text-stone-300 hover:text-amber-400"}`}
+                >
+                  {entry.starred1 ? "★" : "☆"}
+                </button>
+                <span className="text-[10px] text-stone-300 ml-2 mr-1">気づき</span>
+                <button
+                  onClick={handleStar2}
+                  className={`px-2 py-1.5 text-sm transition-colors ${entry.starred2 ? "text-amber-400" : "text-stone-300 hover:text-amber-400"}`}
+                >
+                  {entry.starred2 ? "★" : "☆"}
+                </button>
+                <button
+                  onClick={() => setEditing(true)}
+                  className="ml-3 px-4 py-1.5 bg-stone-100 text-stone-600 text-xs rounded-xl hover:bg-stone-200 transition-all"
+                >
+                  編集
+                </button>
+              </div>
+            </div>
           )}
         </div>
       </div>

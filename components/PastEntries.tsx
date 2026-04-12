@@ -81,8 +81,8 @@ export default function PastEntries({
   const maxOffset = 8;
 
   const { onTouchStart, onTouchEnd } = useSwipe(
-    () => { if (offset < maxOffset) setOffset((o) => o + 1); },
-    () => { if (offset > 0) setOffset((o) => o - 1); }
+    () => { if (offset > 0) setOffset((o) => o - 1); },
+    () => { if (offset < maxOffset) setOffset((o) => o + 1); }
   );
 
   return (
@@ -92,8 +92,8 @@ export default function PastEntries({
           <div className="flex-1 h-px bg-stone-100" />
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setOffset((o) => Math.min(o + 1, maxOffset))}
-              disabled={offset >= maxOffset}
+              onClick={() => setOffset((o) => Math.max(o - 1, 0))}
+              disabled={offset === 0}
               className="w-5 h-5 flex items-center justify-center text-stone-300 hover:text-stone-500 disabled:opacity-30 text-sm leading-none"
             >
               ‹
@@ -102,8 +102,8 @@ export default function PastEntries({
               過去のこの日に近い投稿
             </p>
             <button
-              onClick={() => setOffset((o) => Math.max(o - 1, 0))}
-              disabled={offset === 0}
+              onClick={() => setOffset((o) => Math.min(o + 1, maxOffset))}
+              disabled={offset >= maxOffset}
               className="w-5 h-5 flex items-center justify-center text-stone-300 hover:text-stone-500 disabled:opacity-30 text-sm leading-none"
             >
               ›
@@ -112,7 +112,7 @@ export default function PastEntries({
           <div className="flex-1 h-px bg-stone-100" />
         </div>
 
-        <div className="grid grid-cols-2 gap-2" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+        <div className="flex flex-col gap-2" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
           {items.map(({ year, entry, actualDate }) => {
             const yearsAgo = currentYear - year;
             const [, am, ad] = actualDate
@@ -136,6 +136,11 @@ export default function PastEntries({
                 <p className="text-xs text-stone-400 leading-relaxed h-[7rem] overflow-hidden">
                   {entry.text}
                 </p>
+                {entry.text2 && (
+                  <p className="text-xs text-stone-300 leading-relaxed h-[4rem] overflow-hidden mt-2 pt-2 border-t border-stone-50">
+                    {entry.text2}
+                  </p>
+                )}
               </button>
             ) : (
               <div

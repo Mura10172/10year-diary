@@ -5,6 +5,9 @@ import TodayEntry from "@/components/TodayEntry";
 import PastEntries from "@/components/PastEntries";
 import MonthCalendars from "@/components/MonthCalendars";
 import RecentEntries from "@/components/RecentEntries";
+import BottomNav, { View } from "@/components/BottomNav";
+import ListView from "@/components/ListView";
+import SideMenu from "@/components/SideMenu";
 import { saveEntry, clearAllEntries } from "@/lib/storage";
 import { Entry } from "@/types";
 
@@ -31,6 +34,8 @@ export default function Home() {
   const [date, setDate] = useState(todayStr);
   const [refreshKey, setRefreshKey] = useState(0);
   const [syncing, setSyncing] = useState(true);
+  const [view, setView] = useState<View>("home");
+  const [menuOpen, setMenuOpen] = useState(false);
   const isToday = date === todayStr();
 
   // 起動時に Google Sheets から全データを読み込む
@@ -64,34 +69,67 @@ export default function Home() {
   );
 
   const handleSelect = useCallback((d: string) => {
-    if (d <= todayStr()) setDate(d);
+    if (d <= todayStr()) {
+      setDate(d);
+      setView("home");
+    }
+  }, []);
+
+  const handleMenuSelect = useCallback((ym: string) => {
+    // Scroll to the month section in ListView after menu closes
+    setTimeout(() => {
+      document.getElementById(`month-${ym}`)?.scrollIntoView({ behavior: "smooth" });
+    }, 300);
   }, []);
 
   return (
-    <main className="min-h-screen px-4 py-8 pb-20">
-      <div className="max-w-[520px] mx-auto space-y-5">
-        {syncing && (
-          <p className="text-center text-[10px] text-stone-300 animate-pulse">
-            データを読み込み中...
-          </p>
-        )}
+    <>
+      <main className="min-h-screen bg-stone-50 px-4 py-8 pb-24">
+        <div className="max-w-[520px] mx-auto space-y-5">
+          {view === "home" ? (
+            <>
+              {syncing && (
+                <p className="text-center text-[10px] text-stone-300 animate-pulse">
+                  データを読み込み中...
+                </p>
+              )}
 
-        <DateNav
-          date={date}
-          onPrev={() => goTo(-1)}
-          onNext={() => goTo(1)}
-          onToday={() => setDate(todayStr())}
-          isToday={isToday}
+              <DateNav
+                date={date}
+                onPrev={() => goTo(-1)}
+                onNext={() => goTo(1)}
+                onToday={() => setDate(todayStr())}
+                isToday={isToday}
+              />
+
+              <TodayEntry date={date} onSaved={handleRefresh} refreshKey={refreshKey} />
+
+              <RecentEntries date={date} onSelect={handleSelect} refreshKey={refreshKey} />
+
+              <MonthCalendars date={date} onSelect={handleSelect} refreshKey={refreshKey} />
+
+              <PastEntries date={date} refreshKey={refreshKey} onRefresh={handleRefresh} />
+            </>
+          ) : (
+            <ListView
+              type={view}
+              refreshKey={refreshKey}
+              onRefresh={handleRefresh}
+              onMenuOpen={() => setMenuOpen(true)}
+            />
+          )}
+        </div>
+      </main>
+
+      <BottomNav view={view} onChangeView={setView} />
+
+      {menuOpen && (
+        <SideMenu
+          onClose={() => setMenuOpen(false)}
+          onSelect={handleMenuSelect}
+          refreshKey={refreshKey}
         />
-
-        <TodayEntry date={date} onSaved={handleRefresh} refreshKey={refreshKey} />
-
-        <RecentEntries date={date} onSelect={handleSelect} refreshKey={refreshKey} />
-
-        <MonthCalendars date={date} onSelect={handleSelect} refreshKey={refreshKey} />
-
-        <PastEntries date={date} refreshKey={refreshKey} onRefresh={handleRefresh} />
-      </div>
-    </main>
+      )}
+    </>
   );
 }

@@ -1,16 +1,46 @@
 "use client";
 import { useState, useEffect } from "react";
-import { getEntry } from "@/lib/storage";
+import { getAllEntries } from "@/lib/storage";
 import { Entry } from "@/types";
 import EntryModal from "@/components/EntryModal";
 import { useSwipe } from "@/hooks/useSwipe";
 
-function getSummary(text: string, maxLen = 55): string {
-  const oneLiner = text.replace(/\n+/g, " ").trim();
-  return oneLiner.length > maxLen ? oneLiner.slice(0, maxLen) + "…" : oneLiner;
+function todayStr(): string {
+  const d = new Date();
+  return [
+    d.getFullYear(),
+    String(d.getMonth() + 1).padStart(2, "0"),
+    String(d.getDate()).padStart(2, "0"),
+  ].join("-");
 }
 
-type PastItem = { year: number; dateStr: string; entry: Entry | null };
+type PastItem = { year: number; entry: Entry | null; actualDate: string };
+
+function findClosestEntry(
+  allEntries: Entry[],
+  year: number,
+  month: number,
+  day: number
+): Entry | null {
+  const yearEntries = allEntries.filter((e) =>
+    e.date.startsWith(`${year}-`)
+  );
+  if (yearEntries.length === 0) return null;
+
+  const targetMs = new Date(year, month - 1, day).getTime();
+  let closest = yearEntries[0];
+  let minDist = Infinity;
+
+  for (const e of yearEntries) {
+    const [ey, em, ed] = e.date.split("-").map(Number);
+    const dist = Math.abs(new Date(ey, em - 1, ed).getTime() - targetMs);
+    if (dist < minDist) {
+      minDist = dist;
+      closest = e;
+    }
+  }
+  return closest;
+}
 
 export default function PastEntries({
   date,
@@ -28,26 +58,27 @@ export default function PastEntries({
   const currentYear = parseInt(date.split("-")[0]);
   const [, m, d] = date.split("-").map(Number);
 
-  // 日付が変わったらオフセットをリセット
   useEffect(() => {
     setOffset(0);
     setSelected(null);
   }, [date]);
 
-  // 2件分のデータを読み込む
   useEffect(() => {
+    const today = todayStr();
+    const allEntries = getAllEntries().filter((e) => e.date < today);
     const year1 = currentYear - 1 - offset;
     const year2 = currentYear - 2 - offset;
-    const pad = (n: number) => String(n).padStart(2, "0");
-    const ds1 = `${year1}-${pad(m)}-${pad(d)}`;
-    const ds2 = `${year2}-${pad(m)}-${pad(d)}`;
+
+    const entry1 = findClosestEntry(allEntries, year1, m, d);
+    const entry2 = findClosestEntry(allEntries, year2, m, d);
+
     setItems([
-      { year: year1, dateStr: ds1, entry: getEntry(ds1) ?? null },
-      { year: year2, dateStr: ds2, entry: getEntry(ds2) ?? null },
+      { year: year1, entry: entry1, actualDate: entry1?.date ?? "" },
+      { year: year2, entry: entry2, actualDate: entry2?.date ?? "" },
     ]);
   }, [date, offset, refreshKey, currentYear, m, d]);
 
-  const maxOffset = 8; // 最大10年前まで
+  const maxOffset = 8;
 
   const { onTouchStart, onTouchEnd } = useSwipe(
     () => { if (offset < maxOffset) setOffset((o) => o + 1); },
@@ -68,7 +99,7 @@ export default function PastEntries({
               ‹
             </button>
             <p className="text-xs text-stone-300 tracking-widest whitespace-nowrap">
-              過去のこの日
+              過去のこの日に近い投稿
             </p>
             <button
               onClick={() => setOffset((o) => Math.max(o - 1, 0))}
@@ -82,17 +113,21 @@ export default function PastEntries({
         </div>
 
         <div className="grid grid-cols-2 gap-2" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-          {items.map(({ year, dateStr, entry }) => {
+          {items.map(({ year, entry, actualDate }) => {
             const yearsAgo = currentYear - year;
+            const [, am, ad] = actualDate
+              ? actualDate.split("-").map(Number)
+              : [0, 0, 0];
+
             return entry ? (
               <button
-                key={dateStr}
+                key={year}
                 onClick={() => setSelected(entry)}
                 className="text-left bg-white rounded-2xl px-3 py-3 border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all duration-150"
               >
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-[10px] font-medium text-stone-500">
-                    {year}年
+                    {year}年{am}月{ad}日
                   </span>
                   <span className="text-[10px] text-stone-300">
                     {yearsAgo}年前
@@ -104,7 +139,7 @@ export default function PastEntries({
               </button>
             ) : (
               <div
-                key={dateStr}
+                key={year}
                 className="flex flex-col px-3 py-3 bg-white/60 rounded-2xl border border-stone-50"
               >
                 <span className="text-[10px] text-stone-300 mb-1.5">

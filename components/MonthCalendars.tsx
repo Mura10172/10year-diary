@@ -44,7 +44,7 @@ function CalGrid({
       {DOW.map((w, i) => (
         <div
           key={w}
-          className={`text-center text-[10px] font-medium pb-1.5 ${
+          className={`text-center text-[11px] font-medium pb-1.5 ${
             i === 0 ? "text-red-300" : i === 6 ? "text-blue-300" : "text-stone-300"
           }`}
         >

@@ -120,10 +120,10 @@ export default function PastEntries({
             className="text-left bg-white rounded-2xl px-3 py-3 border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all duration-150"
           >
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[10px] font-medium text-stone-500">
+              <span className="text-[11px] font-medium text-stone-500">
                 {year}年{label}
               </span>
-              <span className="text-[10px] text-stone-300">{currentYear - year}年前</span>
+              <span className="text-[11px] text-stone-300">{currentYear - year}年前</span>
             </div>
             <p className="text-xs text-stone-400 leading-relaxed h-[7rem] overflow-hidden">
               {entry.text}
@@ -131,7 +131,7 @@ export default function PastEntries({
           </button>
         ) : (
           <div className="flex flex-col px-3 py-3 bg-white/60 rounded-2xl border border-stone-50">
-            <span className="text-[10px] text-stone-300 mb-1.5">{year}年</span>
+            <span className="text-[11px] text-stone-300 mb-1.5">{year}年</span>
             <div className="h-[7rem] flex items-center">
               <span className="text-xs text-stone-200">—</span>
             </div>
@@ -144,10 +144,10 @@ export default function PastEntries({
             className="text-left bg-white rounded-2xl px-3 py-3 border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all duration-150"
           >
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[10px] font-medium text-stone-500">
+              <span className="text-[11px] font-medium text-stone-500">
                 {year}年{label}
               </span>
-              <span className="text-[10px] text-stone-300">{currentYear - year}年前</span>
+              <span className="text-[11px] text-stone-300">{currentYear - year}年前</span>
             </div>
             <p className="text-xs text-stone-300 leading-relaxed h-[7rem] overflow-hidden">
               {entry.text2}
@@ -155,7 +155,7 @@ export default function PastEntries({
           </button>
         ) : (
           <div className="bg-white/40 rounded-2xl border border-stone-50 px-3 py-3">
-            <div style={{ visibility: "hidden" }} className="text-[10px] mb-1.5">x</div>
+            <div style={{ visibility: "hidden" }} className="text-[11px] mb-1.5">x</div>
             <div className="h-[7rem]" />
           </div>
         )}

@@ -75,7 +75,7 @@ export default function ListView({
         <div className="space-y-6">
           {sortedYMs.map((ym) => (
             <section key={ym} id={`month-${ym}`}>
-              <p className="text-[10px] text-stone-300 tracking-widest mb-2">
+              <p className="text-[11px] text-stone-300 tracking-widest mb-2">
                 {formatYM(ym)}
               </p>
               <div className="space-y-2">
@@ -88,7 +88,7 @@ export default function ListView({
                       className="w-full text-left bg-white rounded-2xl px-4 py-3 border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all duration-150"
                     >
                       <div className="flex items-center justify-between mb-1.5">
-                        <p className="text-[10px] text-stone-400">
+                        <p className="text-[11px] text-stone-400">
                           {y}年{m}月{d}日
                         </p>
                         {(entry.starred1 || entry.starred2) && (
@@ -100,7 +100,7 @@ export default function ListView({
                       {(type === "post1" || type === "both" || type === "star") && entry.text && (
                         <div className={type === "star" && entry.starred1 ? "relative" : ""}>
                           {type === "star" && entry.starred1 && (
-                            <span className="absolute -left-1 top-0 text-[10px] text-amber-400">★</span>
+                            <span className="absolute -left-1 top-0 text-[11px] text-amber-400">★</span>
                           )}
                           <p className={`text-sm text-stone-600 leading-relaxed ${type === "star" && entry.starred1 ? "pl-3" : ""}`}>
                             {entry.text}
@@ -117,7 +117,7 @@ export default function ListView({
                       {(type === "post2" || type === "both" || type === "star") && entry.text2 && (
                         <div className={type === "star" && entry.starred2 ? "relative" : ""}>
                           {type === "star" && entry.starred2 && (
-                            <span className="absolute -left-1 top-0 text-[10px] text-amber-400">★</span>
+                            <span className="absolute -left-1 top-0 text-[11px] text-amber-400">★</span>
                           )}
                           <p className={`text-sm text-stone-500 leading-relaxed ${type === "star" && entry.starred2 ? "pl-3" : ""}`}>
                             {entry.text2}

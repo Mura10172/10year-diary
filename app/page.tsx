@@ -92,7 +92,7 @@ export default function Home() {
           {view === "home" ? (
             <>
               {syncing && (
-                <p className="text-center text-[10px] text-stone-300 animate-pulse">
+                <p className="text-center text-[11px] text-stone-300 animate-pulse">
                   データを読み込み中...
                 </p>
               )}

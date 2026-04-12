@@ -98,7 +98,7 @@ export default function BottomNav({
             }`}
           >
             {tab.icon}
-            <span className="text-[10px] font-medium">{tab.label}</span>
+            <span className="text-[11px] font-medium">{tab.label}</span>
           </button>
         ))}
       </div>

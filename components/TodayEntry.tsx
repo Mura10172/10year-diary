@@ -156,9 +156,8 @@ export default function TodayEntry({
 
   return (
     <div className="bg-white rounded-3xl p-5 border border-stone-100 shadow-sm space-y-4">
-      {/* Section 1: 日記 */}
+      {/* Section 1 */}
       <div>
-        <p className="text-[10px] text-stone-300 tracking-widest mb-2">日記</p>
         {editing1 ? (
           <div className="space-y-3">
             <textarea
@@ -230,9 +229,8 @@ export default function TodayEntry({
       {/* Divider */}
       <div className="h-px bg-stone-50" />
 
-      {/* Section 2: 気づき */}
+      {/* Section 2 */}
       <div>
-        <p className="text-[10px] text-stone-300 tracking-widest mb-2">気づき</p>
         {editing2 ? (
           <div className="space-y-3">
             <textarea

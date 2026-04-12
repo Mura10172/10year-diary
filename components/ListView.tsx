@@ -29,6 +29,7 @@ export default function ListView({
       .filter((e) => {
         if (type === "post1") return !!e.text;
         if (type === "post2") return !!e.text2;
+        if (type === "both") return !!e.text || !!e.text2;
         if (type === "star") return e.starred1 || e.starred2;
         return false;
       })
@@ -48,7 +49,8 @@ export default function ListView({
   const typeLabels: Record<Exclude<View, "home">, string> = {
     post1: "投稿１",
     post2: "投稿２",
-    star: "★",
+    both: "投稿１と２",
+    star: "お気に入り",
   };
 
   return (
@@ -61,7 +63,9 @@ export default function ListView({
           className="w-9 h-9 flex items-center justify-center text-stone-400 hover:text-stone-600 rounded-xl hover:bg-stone-100 transition-all"
           aria-label="年月メニュー"
         >
-          <HamburgerIcon />
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
         </button>
       </div>
 
@@ -71,7 +75,7 @@ export default function ListView({
         <div className="space-y-6">
           {sortedYMs.map((ym) => (
             <section key={ym} id={`month-${ym}`}>
-              <p className="text-[10px] text-stone-300 tracking-widest mb-2 uppercase">
+              <p className="text-[10px] text-stone-300 tracking-widest mb-2">
                 {formatYM(ym)}
               </p>
               <div className="space-y-2">
@@ -91,23 +95,33 @@ export default function ListView({
                           <span className="text-xs text-amber-400">★</span>
                         )}
                       </div>
-                      {(type === "post1" || type === "star") && entry.text && (
-                        <div>
-                          {type === "star" && (
-                            <p className="text-[10px] text-stone-300 tracking-widest mb-1">日記{entry.starred1 ? " ★" : ""}</p>
+
+                      {/* 投稿1 */}
+                      {(type === "post1" || type === "both" || type === "star") && entry.text && (
+                        <div className={type === "star" && entry.starred1 ? "relative" : ""}>
+                          {type === "star" && entry.starred1 && (
+                            <span className="absolute -left-1 top-0 text-[10px] text-amber-400">★</span>
                           )}
-                          <p className="text-sm text-stone-600 leading-relaxed">{entry.text}</p>
+                          <p className={`text-sm text-stone-600 leading-relaxed ${type === "star" && entry.starred1 ? "pl-3" : ""}`}>
+                            {entry.text}
+                          </p>
                         </div>
                       )}
-                      {type === "star" && entry.text && entry.text2 && (
+
+                      {/* 投稿1と2の区切り */}
+                      {(type === "both" || type === "star") && entry.text && entry.text2 && (
                         <div className="h-px bg-stone-50 my-3" />
                       )}
-                      {(type === "post2" || type === "star") && entry.text2 && (
-                        <div>
-                          {type === "star" && (
-                            <p className="text-[10px] text-stone-300 tracking-widest mb-1">気づき{entry.starred2 ? " ★" : ""}</p>
+
+                      {/* 投稿2 */}
+                      {(type === "post2" || type === "both" || type === "star") && entry.text2 && (
+                        <div className={type === "star" && entry.starred2 ? "relative" : ""}>
+                          {type === "star" && entry.starred2 && (
+                            <span className="absolute -left-1 top-0 text-[10px] text-amber-400">★</span>
                           )}
-                          <p className="text-sm text-stone-500 leading-relaxed">{entry.text2}</p>
+                          <p className={`text-sm text-stone-500 leading-relaxed ${type === "star" && entry.starred2 ? "pl-3" : ""}`}>
+                            {entry.text2}
+                          </p>
                         </div>
                       )}
                     </button>
@@ -129,19 +143,5 @@ export default function ListView({
         />
       )}
     </>
-  );
-}
-
-function HamburgerIcon() {
-  return (
-    <svg
-      className="w-5 h-5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      viewBox="0 0 24 24"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-    </svg>
   );
 }

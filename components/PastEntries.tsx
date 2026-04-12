@@ -53,7 +53,7 @@ export default function PastEntries({
 
   const currentYear = parseInt(date.split("-")[0]);
   const [, m, d] = date.split("-").map(Number);
-  const maxYears = 10;
+  const maxYears = currentYear - 1972; // 1972年まで遡る
 
   useEffect(() => {
     setCurrentIdx(0);

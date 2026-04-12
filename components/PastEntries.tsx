@@ -88,16 +88,16 @@ export default function PastEntries({
   const handleTouchMove = (e: React.TouchEvent) => {
     if (touchStartX === null) return;
     const delta = e.touches[0].clientX - touchStartX;
-    if (!canOlder && delta < 0) setDragDelta(delta * 0.2);
-    else if (!canNewer && delta > 0) setDragDelta(delta * 0.2);
+    if (!canOlder && delta > 0) setDragDelta(delta * 0.2);
+    else if (!canNewer && delta < 0) setDragDelta(delta * 0.2);
     else setDragDelta(delta);
   };
 
   const handleTouchEnd = () => {
     if (touchStartX === null) return;
     setIsAnimating(true);
-    if (dragDelta < -50 && canOlder) setCurrentPage((p) => p + 1);
-    else if (dragDelta > 50 && canNewer) setCurrentPage((p) => p - 1);
+    if (dragDelta > 50 && canOlder) setCurrentPage((p) => p + 1);
+    else if (dragDelta < -50 && canNewer) setCurrentPage((p) => p - 1);
     setDragDelta(0);
     setTouchStartX(null);
   };
@@ -175,8 +175,8 @@ export default function PastEntries({
           <div className="flex-1 h-px bg-stone-100" />
           <div className="flex items-center gap-2">
             <button
-              onClick={() => { setIsAnimating(true); setCurrentPage((p) => p + 1); }}
-              disabled={!canOlder}
+              onClick={() => { setIsAnimating(true); setCurrentPage((p) => p - 1); }}
+              disabled={!canNewer}
               className="w-5 h-5 flex items-center justify-center text-stone-300 hover:text-stone-500 disabled:opacity-30 text-sm leading-none"
             >
               ‹
@@ -185,8 +185,8 @@ export default function PastEntries({
               過去のこの日に近い投稿
             </p>
             <button
-              onClick={() => { setIsAnimating(true); setCurrentPage((p) => p - 1); }}
-              disabled={!canNewer}
+              onClick={() => { setIsAnimating(true); setCurrentPage((p) => p + 1); }}
+              disabled={!canOlder}
               className="w-5 h-5 flex items-center justify-center text-stone-300 hover:text-stone-500 disabled:opacity-30 text-sm leading-none"
             >
               ›

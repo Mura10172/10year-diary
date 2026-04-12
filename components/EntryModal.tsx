@@ -191,14 +191,14 @@ export default function EntryModal({
                 削除
               </button>
               <div className="flex items-center gap-1">
-                <span className="text-[10px] text-stone-300 mr-1">日記</span>
+                <span className="text-[10px] text-stone-300 mr-1">投稿１</span>
                 <button
                   onClick={handleStar1}
                   className={`px-2 py-1.5 text-sm transition-colors ${entry.starred1 ? "text-amber-400" : "text-stone-300 hover:text-amber-400"}`}
                 >
                   {entry.starred1 ? "★" : "☆"}
                 </button>
-                <span className="text-[10px] text-stone-300 ml-2 mr-1">気づき</span>
+                <span className="text-[10px] text-stone-300 ml-2 mr-1">投稿２</span>
                 <button
                   onClick={handleStar2}
                   className={`px-2 py-1.5 text-sm transition-colors ${entry.starred2 ? "text-amber-400" : "text-stone-300 hover:text-amber-400"}`}

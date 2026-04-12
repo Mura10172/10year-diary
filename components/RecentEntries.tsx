@@ -37,16 +37,17 @@ export default function RecentEntries({
     setOffset(0);
   }, [refreshKey]);
 
-  if (entries.length === 0) return null;
-
   const visible = entries.slice(offset, offset + 2);
   const canPrev = offset + 2 < entries.length;
   const canNext = offset > 0;
 
+  // フックは条件分岐より前に呼ぶ必要がある（Rules of Hooks）
   const { onTouchStart, onTouchEnd } = useSwipe(
     () => { if (canPrev) setOffset((o) => o + 1); },
     () => { if (canNext) setOffset((o) => o - 1); }
   );
+
+  if (entries.length === 0) return null;
 
   return (
     <section>

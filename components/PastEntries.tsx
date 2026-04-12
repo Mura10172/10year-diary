@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { getAllEntries } from "@/lib/storage";
 import { Entry } from "@/types";
 import EntryModal from "@/components/EntryModal";
-import { useSwipe } from "@/hooks/useSwipe";
 
 function todayStr(): string {
   const d = new Date();
@@ -14,32 +13,28 @@ function todayStr(): string {
   ].join("-");
 }
 
-type PastItem = { year: number; entry: Entry | null; actualDate: string };
+type PageData = { year: number; left: Entry | null; right: Entry | null };
 
-function findClosestEntry(
+/** その年の中でこの日に近い順に最大2つ返す */
+function findTwoClosest(
   allEntries: Entry[],
   year: number,
   month: number,
   day: number
-): Entry | null {
-  const yearEntries = allEntries.filter((e) =>
-    e.date.startsWith(`${year}-`)
-  );
-  if (yearEntries.length === 0) return null;
+): [Entry | null, Entry | null] {
+  const yearEntries = allEntries.filter((e) => e.date.startsWith(`${year}-`));
+  if (yearEntries.length === 0) return [null, null];
 
   const targetMs = new Date(year, month - 1, day).getTime();
-  let closest = yearEntries[0];
-  let minDist = Infinity;
-
-  for (const e of yearEntries) {
-    const [ey, em, ed] = e.date.split("-").map(Number);
-    const dist = Math.abs(new Date(ey, em - 1, ed).getTime() - targetMs);
-    if (dist < minDist) {
-      minDist = dist;
-      closest = e;
-    }
-  }
-  return closest;
+  const sorted = [...yearEntries].sort((a, b) => {
+    const [ay, am, ad] = a.date.split("-").map(Number);
+    const [by, bm, bd] = b.date.split("-").map(Number);
+    return (
+      Math.abs(new Date(ay, am - 1, ad).getTime() - targetMs) -
+      Math.abs(new Date(by, bm - 1, bd).getTime() - targetMs)
+    );
+  });
+  return [sorted[0] ?? null, sorted[1] ?? null];
 }
 
 export default function PastEntries({
@@ -51,39 +46,127 @@ export default function PastEntries({
   refreshKey: number;
   onRefresh?: () => void;
 }) {
-  const [offset, setOffset] = useState(0);
-  const [items, setItems] = useState<PastItem[]>([]);
+  const [pages, setPages] = useState<PageData[]>([]);
+  const [currentPage, setCurrentPage] = useState(0);
   const [selected, setSelected] = useState<Entry | null>(null);
+
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [dragDelta, setDragDelta] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   const currentYear = parseInt(date.split("-")[0]);
   const [, m, d] = date.split("-").map(Number);
 
+  const maxPage = 9; // 10ページ = 10年前まで
+
   useEffect(() => {
-    setOffset(0);
+    setCurrentPage(0);
     setSelected(null);
   }, [date]);
 
   useEffect(() => {
     const today = todayStr();
-    const allEntries = getAllEntries().filter((e) => e.date < today);
-    const year1 = currentYear - 1 - offset;
-    const year2 = currentYear - 2 - offset;
+    const entries = getAllEntries().filter((e) => e.date < today);
 
-    const entry1 = findClosestEntry(allEntries, year1, m, d);
-    const entry2 = findClosestEntry(allEntries, year2, m, d);
+    const built: PageData[] = [];
+    for (let p = 0; p <= maxPage; p++) {
+      const year = currentYear - 1 - p;
+      const [left, right] = findTwoClosest(entries, year, m, d);
+      built.push({ year, left, right });
+    }
+    setPages(built);
+  }, [date, refreshKey, currentYear, m, d]);
 
-    setItems([
-      { year: year1, entry: entry1, actualDate: entry1?.date ?? "" },
-      { year: year2, entry: entry2, actualDate: entry2?.date ?? "" },
-    ]);
-  }, [date, offset, refreshKey, currentYear, m, d]);
+  const canOlder = currentPage < maxPage;
+  const canNewer = currentPage > 0;
 
-  const maxOffset = 8;
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX);
+    setIsAnimating(false);
+  };
 
-  const { onTouchStart, onTouchEnd } = useSwipe(
-    () => { if (offset > 0) setOffset((o) => o - 1); },
-    () => { if (offset < maxOffset) setOffset((o) => o + 1); }
-  );
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartX === null) return;
+    const delta = e.touches[0].clientX - touchStartX;
+    if (!canOlder && delta < 0) setDragDelta(delta * 0.2);
+    else if (!canNewer && delta > 0) setDragDelta(delta * 0.2);
+    else setDragDelta(delta);
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartX === null) return;
+    setIsAnimating(true);
+    if (dragDelta < -50 && canOlder) setCurrentPage((p) => p + 1);
+    else if (dragDelta > 50 && canNewer) setCurrentPage((p) => p - 1);
+    setDragDelta(0);
+    setTouchStartX(null);
+  };
+
+  if (pages.length === 0) return null;
+
+  const translateX = `calc(${-currentPage * 100}% + ${dragDelta}px)`;
+
+  function entryLabel(entry: Entry) {
+    const [, em, ed] = entry.date.split("-").map(Number);
+    return `${em}月${ed}日`;
+  }
+
+  function Post1Cell({ entry, year }: { entry: Entry | null; year: number }) {
+    if (!entry) {
+      return (
+        <div className="flex flex-col px-3 py-3 bg-white/60 rounded-2xl border border-stone-50">
+          <span className="text-[10px] text-stone-300 mb-1.5">{year}年</span>
+          <div className="h-[7rem] flex items-center">
+            <span className="text-xs text-stone-200">—</span>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <button
+        onClick={() => setSelected(entry)}
+        className="text-left bg-white rounded-2xl px-3 py-3 border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all duration-150"
+      >
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-[10px] font-medium text-stone-500">
+            {year}年{entryLabel(entry)}
+          </span>
+          <span className="text-[10px] text-stone-300">
+            {currentYear - year}年前
+          </span>
+        </div>
+        <p className="text-xs text-stone-400 leading-relaxed h-[7rem] overflow-hidden">
+          {entry.text}
+        </p>
+      </button>
+    );
+  }
+
+  function Post2Cell({ entry, year }: { entry: Entry | null; year: number }) {
+    if (!entry?.text2) {
+      return (
+        <div className="rounded-2xl border border-stone-50 bg-white/40 h-[7rem]" />
+      );
+    }
+    return (
+      <button
+        onClick={() => setSelected(entry)}
+        className="text-left bg-white rounded-2xl px-3 py-3 border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all duration-150"
+      >
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-[10px] font-medium text-stone-500">
+            {year}年{entryLabel(entry)}
+          </span>
+          <span className="text-[10px] text-stone-300">
+            {currentYear - year}年前
+          </span>
+        </div>
+        <p className="text-xs text-stone-300 leading-relaxed h-[7rem] overflow-hidden">
+          {entry.text2}
+        </p>
+      </button>
+    );
+  }
 
   return (
     <>
@@ -92,8 +175,8 @@ export default function PastEntries({
           <div className="flex-1 h-px bg-stone-100" />
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setOffset((o) => Math.max(o - 1, 0))}
-              disabled={offset === 0}
+              onClick={() => { setIsAnimating(true); setCurrentPage((p) => p + 1); }}
+              disabled={!canOlder}
               className="w-5 h-5 flex items-center justify-center text-stone-300 hover:text-stone-500 disabled:opacity-30 text-sm leading-none"
             >
               ‹
@@ -102,8 +185,8 @@ export default function PastEntries({
               過去のこの日に近い投稿
             </p>
             <button
-              onClick={() => setOffset((o) => Math.min(o + 1, maxOffset))}
-              disabled={offset >= maxOffset}
+              onClick={() => { setIsAnimating(true); setCurrentPage((p) => p - 1); }}
+              disabled={!canNewer}
               className="w-5 h-5 flex items-center justify-center text-stone-300 hover:text-stone-500 disabled:opacity-30 text-sm leading-none"
             >
               ›
@@ -112,50 +195,33 @@ export default function PastEntries({
           <div className="flex-1 h-px bg-stone-100" />
         </div>
 
-        <div className="flex flex-col gap-2" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-          {items.map(({ year, entry, actualDate }) => {
-            const yearsAgo = currentYear - year;
-            const [, am, ad] = actualDate
-              ? actualDate.split("-").map(Number)
-              : [0, 0, 0];
-
-            return entry ? (
-              <button
-                key={year}
-                onClick={() => setSelected(entry)}
-                className="text-left bg-white rounded-2xl px-3 py-3 border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all duration-150"
-              >
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[10px] font-medium text-stone-500">
-                    {year}年{am}月{ad}日
-                  </span>
-                  <span className="text-[10px] text-stone-300">
-                    {yearsAgo}年前
-                  </span>
-                </div>
-                <p className="text-xs text-stone-400 leading-relaxed h-[7rem] overflow-hidden">
-                  {entry.text}
-                </p>
-                {entry.text2 && (
-                  <p className="text-xs text-stone-300 leading-relaxed h-[4rem] overflow-hidden mt-2 pt-2 border-t border-stone-50">
-                    {entry.text2}
-                  </p>
-                )}
-              </button>
-            ) : (
+        <div style={{ overflow: "hidden" }}>
+          <div
+            style={{
+              display: "flex",
+              transform: `translateX(${translateX})`,
+              transition: isAnimating ? "transform 0.3s ease" : "none",
+            }}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onTransitionEnd={() => setIsAnimating(false)}
+          >
+            {pages.map(({ year, left, right }, pageIdx) => (
               <div
-                key={year}
-                className="flex flex-col px-3 py-3 bg-white/60 rounded-2xl border border-stone-50"
+                key={pageIdx}
+                style={{ minWidth: "100%" }}
+                className="grid grid-cols-2 gap-2"
               >
-                <span className="text-[10px] text-stone-300 mb-1.5">
-                  {year}年
-                </span>
-                <div className="h-[7rem] flex items-center">
-                  <span className="text-xs text-stone-200">—</span>
-                </div>
+                {/* 行1: 投稿１ × 2列 */}
+                <Post1Cell entry={left} year={year} />
+                <Post1Cell entry={right} year={year} />
+                {/* 行2: 投稿２ × 2列 */}
+                <Post2Cell entry={left} year={year} />
+                <Post2Cell entry={right} year={year} />
               </div>
-            );
-          })}
+            ))}
+          </div>
         </div>
       </section>
 

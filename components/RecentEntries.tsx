@@ -13,10 +13,6 @@ function todayStr(): string {
   ].join("-");
 }
 
-function getSummary(text: string, maxLen = 55): string {
-  const oneLiner = text.replace(/\n+/g, " ").trim();
-  return oneLiner.length > maxLen ? oneLiner.slice(0, maxLen) + "…" : oneLiner;
-}
 
 export default function RecentEntries({
   date,

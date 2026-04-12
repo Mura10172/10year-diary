@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getAllEntries } from "@/lib/storage";
 
 export default function SideMenu({
@@ -12,13 +12,15 @@ export default function SideMenu({
   refreshKey: number;
 }) {
   const menuRef = useRef<HTMLDivElement>(null);
+  const [yms, setYms] = useState<string[]>([]);
 
-  const entries = getAllEntries().sort((a, b) => b.date.localeCompare(a.date));
-
-  // Unique year-months sorted desc
-  const yms = [...new Set(entries.map((e) => e.date.slice(0, 7)))].sort(
-    (a, b) => b.localeCompare(a)
-  );
+  useEffect(() => {
+    const entries = getAllEntries().sort((a, b) => b.date.localeCompare(a.date));
+    const uniqueYms = [...new Set(entries.map((e) => e.date.slice(0, 7)))].sort(
+      (a, b) => b.localeCompare(a)
+    );
+    setYms(uniqueYms);
+  }, [refreshKey]);
 
   // Group months by year
   const yearGroups: Record<string, string[]> = {};

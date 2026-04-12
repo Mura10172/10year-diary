@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { getAllEntries } from "@/lib/storage";
 import { Entry } from "@/types";
 import EntryModal from "@/components/EntryModal";
-import { View } from "@/components/BottomNav";
+import type { View } from "@/components/BottomNav";
 
 function formatYM(ym: string): string {
   const [y, m] = ym.split("-").map(Number);

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getAllEntries } from "@/lib/storage";
 import { Entry } from "@/types";
 import EntryModal from "@/components/EntryModal";
@@ -50,9 +50,16 @@ export default function PastEntries({
   const [currentPage, setCurrentPage] = useState(0);
   const [selected, setSelected] = useState<Entry | null>(null);
 
-  const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [dragDelta, setDragDelta] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+
+  const touchStartXRef = useRef<number | null>(null);
+  const touchStartYRef = useRef<number | null>(null);
+  const dragDeltaRef = useRef(0);
+  const swipeDirRef = useRef<"h" | "v" | null>(null);
+  const canOlderRef = useRef(false);
+  const canNewerRef = useRef(false);
+  const trackRef = useRef<HTMLDivElement>(null);
 
   const currentYear = parseInt(date.split("-")[0]);
   const [, m, d] = date.split("-").map(Number);
@@ -80,27 +87,65 @@ export default function PastEntries({
   const canOlder = currentPage < maxPage;
   const canNewer = currentPage > 0;
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStartX(e.touches[0].clientX);
-    setIsAnimating(false);
-  };
+  canOlderRef.current = canOlder;
+  canNewerRef.current = canNewer;
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (touchStartX === null) return;
-    const delta = e.touches[0].clientX - touchStartX;
-    if (!canOlder && delta > 0) setDragDelta(delta * 0.2);
-    else if (!canNewer && delta < 0) setDragDelta(delta * 0.2);
-    else setDragDelta(delta);
-  };
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el) return;
 
-  const handleTouchEnd = () => {
-    if (touchStartX === null) return;
-    setIsAnimating(true);
-    if (dragDelta > 50 && canOlder) setCurrentPage((p) => p + 1);
-    else if (dragDelta < -50 && canNewer) setCurrentPage((p) => p - 1);
-    setDragDelta(0);
-    setTouchStartX(null);
-  };
+    const onStart = (e: TouchEvent) => {
+      touchStartXRef.current = e.touches[0].clientX;
+      touchStartYRef.current = e.touches[0].clientY;
+      dragDeltaRef.current = 0;
+      swipeDirRef.current = null;
+      setIsAnimating(false);
+      setDragDelta(0);
+    };
+
+    const onMove = (e: TouchEvent) => {
+      if (touchStartXRef.current === null || touchStartYRef.current === null) return;
+      const dx = e.touches[0].clientX - touchStartXRef.current;
+      const dy = e.touches[0].clientY - touchStartYRef.current;
+      if (!swipeDirRef.current) {
+        if (Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
+        swipeDirRef.current = Math.abs(dx) >= Math.abs(dy) ? "h" : "v";
+      }
+      if (swipeDirRef.current === "v") return;
+      e.preventDefault();
+      const older = canOlderRef.current;
+      const newer = canNewerRef.current;
+      let delta = dx;
+      if (!older && delta < 0) delta = dx * 0.2;
+      else if (!newer && delta > 0) delta = dx * 0.2;
+      dragDeltaRef.current = delta;
+      setDragDelta(delta);
+    };
+
+    const onEnd = () => {
+      if (touchStartXRef.current === null) return;
+      const delta = dragDeltaRef.current;
+      setIsAnimating(true);
+      if (delta < -50 && canOlderRef.current) setCurrentPage((p) => p + 1);
+      else if (delta > 50 && canNewerRef.current) setCurrentPage((p) => p - 1);
+      dragDeltaRef.current = 0;
+      setDragDelta(0);
+      touchStartXRef.current = null;
+      touchStartYRef.current = null;
+      swipeDirRef.current = null;
+    };
+
+    el.addEventListener("touchstart", onStart, { passive: true });
+    el.addEventListener("touchmove", onMove, { passive: false });
+    el.addEventListener("touchend", onEnd, { passive: true });
+    return () => {
+      el.removeEventListener("touchstart", onStart);
+      el.removeEventListener("touchmove", onMove);
+      el.removeEventListener("touchend", onEnd);
+    };
+  }, []);
+
+
 
   if (pages.length === 0) return null;
 
@@ -197,15 +242,12 @@ export default function PastEntries({
 
         <div style={{ overflow: "hidden" }}>
           <div
+            ref={trackRef}
             style={{
               display: "flex",
               transform: `translateX(${translateX})`,
               transition: isAnimating ? "transform 0.3s ease" : "none",
-              touchAction: "pan-y",
             }}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
             onTransitionEnd={() => setIsAnimating(false)}
           >
             {pages.map(({ year, left, right }, pageIdx) => (

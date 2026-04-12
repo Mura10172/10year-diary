@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { getAllEntries } from "@/lib/storage";
 import { Entry } from "@/types";
+import { useSwipe } from "@/hooks/useSwipe";
 
 function todayStr(): string {
   const d = new Date();
@@ -42,6 +43,11 @@ export default function RecentEntries({
   const canPrev = offset + 2 < entries.length;
   const canNext = offset > 0;
 
+  const { onTouchStart, onTouchEnd } = useSwipe(
+    () => { if (canPrev) setOffset((o) => o + 1); },
+    () => { if (canNext) setOffset((o) => o - 1); }
+  );
+
   return (
     <section>
       <div className="flex items-center gap-3 mb-2">
@@ -68,7 +74,7 @@ export default function RecentEntries({
         <div className="flex-1 h-px bg-stone-100" />
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-2" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
         {visible.map((entry) => {
           const [y, m, d] = entry.date.split("-").map(Number);
           return (

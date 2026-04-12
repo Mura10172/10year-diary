@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { getEntry } from "@/lib/storage";
 import { Entry } from "@/types";
 import EntryModal from "@/components/EntryModal";
+import { useSwipe } from "@/hooks/useSwipe";
 
 function getSummary(text: string, maxLen = 55): string {
   const oneLiner = text.replace(/\n+/g, " ").trim();
@@ -48,6 +49,11 @@ export default function PastEntries({
 
   const maxOffset = 8; // 最大10年前まで
 
+  const { onTouchStart, onTouchEnd } = useSwipe(
+    () => { if (offset < maxOffset) setOffset((o) => o + 1); },
+    () => { if (offset > 0) setOffset((o) => o - 1); }
+  );
+
   return (
     <>
       <section>
@@ -75,7 +81,7 @@ export default function PastEntries({
           <div className="flex-1 h-px bg-stone-100" />
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
           {items.map(({ year, dateStr, entry }) => {
             const yearsAgo = currentYear - year;
             return entry ? (

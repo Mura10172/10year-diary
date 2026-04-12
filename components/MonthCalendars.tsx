@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { getEntryDatesForMonth } from "@/lib/storage";
+import { useSwipe } from "@/hooks/useSwipe";
 
 const DOW = ["日", "月", "火", "水", "木", "金", "土"];
 
@@ -71,6 +72,11 @@ export default function MonthCalendars({
   };
 
   const canNextMonth = !(calYear >= ty && calMonth >= tm);
+
+  const { onTouchStart, onTouchEnd } = useSwipe(
+    () => { if (canNextMonth) nextMonth(); },
+    () => prevMonth()
+  );
 
   const firstDow = new Date(calYear, calMonth - 1, 1).getDay();
   const daysInMonth = new Date(calYear, calMonth, 0).getDate();
@@ -176,7 +182,7 @@ export default function MonthCalendars({
         </div>
 
         {/* カレンダーグリッド */}
-        <div className="grid grid-cols-7 gap-y-0.5">
+        <div className="grid grid-cols-7 gap-y-0.5" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
           {DOW.map((w, i) => (
             <div
               key={w}

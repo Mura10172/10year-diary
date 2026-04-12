@@ -7,8 +7,7 @@ export function useSpeech() {
   const [supported, setSupported] = useState(false);
   const recRef = useRef<any>(null);
   const callbackRef = useRef<((text: string) => void) | null>(null);
-  const lastFinalTextRef = useRef("");
-  const lastFinalTimeRef = useRef(0);
+  const stoppedRef = useRef(true); // ユーザーが明示的に停止したか
 
   useEffect(() => {
     const SR =
@@ -19,29 +18,15 @@ export function useSpeech() {
 
     const rec = new SR();
     rec.lang = "ja-JP";
-    rec.continuous = true;
+    rec.continuous = false;    // 1発話ごとにセッションを区切る（モバイル重複防止）
     rec.interimResults = true;
 
     rec.onresult = (e: any) => {
       let final = "";
       let interimText = "";
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        if (e.results[i].isFinal) {
-          const transcript = e.results[i][0].transcript;
-          const now = Date.now();
-          // 1.5秒以内に同じテキストが来たら重複とみなしスキップ
-          if (
-            transcript.trim() === lastFinalTextRef.current.trim() &&
-            now - lastFinalTimeRef.current < 1500
-          ) {
-            continue;
-          }
-          final += transcript;
-          lastFinalTextRef.current = transcript;
-          lastFinalTimeRef.current = now;
-        } else {
-          interimText += e.results[i][0].transcript;
-        }
+      for (let i = 0; i < e.results.length; i++) {
+        if (e.results[i].isFinal) final += e.results[i][0].transcript;
+        else interimText += e.results[i][0].transcript;
       }
       if (final) {
         callbackRef.current?.(final);
@@ -52,11 +37,19 @@ export function useSpeech() {
     };
 
     rec.onend = () => {
-      setListening(false);
-      setInterim("");
+      // ユーザーが停止していなければ次の発話のために再開
+      if (!stoppedRef.current) {
+        try { rec.start(); } catch {}
+      } else {
+        setListening(false);
+        setInterim("");
+      }
     };
 
-    rec.onerror = () => {
+    rec.onerror = (e: any) => {
+      // no-speech は無視して再開、それ以外は停止
+      if (e.error === "no-speech") return;
+      stoppedRef.current = true;
       setListening(false);
       setInterim("");
     };
@@ -69,8 +62,7 @@ export function useSpeech() {
 
   const start = useCallback((onFinal: (text: string) => void) => {
     callbackRef.current = onFinal;
-    lastFinalTextRef.current = "";
-    lastFinalTimeRef.current = 0;
+    stoppedRef.current = false;
     try {
       recRef.current?.start();
       setListening(true);
@@ -78,6 +70,7 @@ export function useSpeech() {
   }, []);
 
   const stop = useCallback(() => {
+    stoppedRef.current = true;
     try { recRef.current?.stop(); } catch {}
     setListening(false);
     setInterim("");

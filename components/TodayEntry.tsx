@@ -11,10 +11,14 @@ export default function TodayEntry({
   date,
   onSaved,
   refreshKey,
+  onPrev,
+  onNext,
 }: {
   date: string;
   onSaved?: () => void;
   refreshKey?: number;
+  onPrev?: () => void;
+  onNext?: () => void;
 }) {
   const [entry, setEntry] = useState<Entry | null>(null);
 
@@ -28,29 +32,15 @@ export default function TodayEntry({
   const [editing2, setEditing2] = useState(false);
   const speech2 = useSpeech();
 
-  // Scroll into view when editing starts
-  const containerRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (editing1 || editing2) {
-      setTimeout(() => {
-        containerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 50);
-    }
-  }, [editing1, editing2]);
-
-  // Carousel state
-  const [currentIdx, setCurrentIdx] = useState(0);
-  const [dragDelta, setDragDelta] = useState(0);
-  const trackRef = useRef<HTMLDivElement>(null);
-  const touchStartRef = useRef(0);
-  const dragDeltaRef = useRef(0);
-  const currentIdxRef = useRef(0);
-  currentIdxRef.current = currentIdx;
-
   // Photos state
   const [photos, setPhotos] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [viewingPhoto, setViewingPhoto] = useState<string | null>(null);
+
+  // Refs
+  const containerRef = useRef<HTMLDivElement>(null);
+  const touchStartRef = useRef(0);
+  const dragDeltaRef = useRef(0);
 
   useEffect(() => {
     speech1.stop();
@@ -62,16 +52,23 @@ export default function TodayEntry({
     setEditing1(false);
     setEditing2(false);
     setPhotos(e?.photos ?? []);
-    setCurrentIdx(0);
-    setDragDelta(0);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [date, refreshKey]);
 
-  // Touch handlers for carousel swipe (disabled while editing)
+  // Scroll into view when editing starts
+  useEffect(() => {
+    if (editing1 || editing2) {
+      setTimeout(() => {
+        containerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 50);
+    }
+  }, [editing1, editing2]);
+
+  // Swipe left/right to navigate dates (disabled while editing)
   useEffect(() => {
     if (editing1 || editing2) return;
-    const track = trackRef.current;
-    if (!track) return;
+    const el = containerRef.current;
+    if (!el) return;
 
     const onStart = (e: TouchEvent) => {
       touchStartRef.current = e.touches[0].clientX;
@@ -79,31 +76,26 @@ export default function TodayEntry({
     };
     const onMove = (e: TouchEvent) => {
       const dx = e.touches[0].clientX - touchStartRef.current;
-      if (Math.abs(dx) > 5) e.preventDefault();
       dragDeltaRef.current = dx;
-      setDragDelta(dx);
+      if (Math.abs(dx) > 5) e.preventDefault();
     };
     const onEnd = () => {
       const dx = dragDeltaRef.current;
       const threshold = 40;
-      let next = currentIdxRef.current;
-      if (dx < -threshold) next = Math.min(1, next + 1);
-      else if (dx > threshold) next = Math.max(0, next - 1);
-      setCurrentIdx(next);
-      currentIdxRef.current = next;
-      setDragDelta(0);
+      if (dx > threshold) onPrev?.();       // 右スワイプ → 前日
+      else if (dx < -threshold) onNext?.(); // 左スワイプ → 次の日
       dragDeltaRef.current = 0;
     };
 
-    track.addEventListener("touchstart", onStart, { passive: true });
-    track.addEventListener("touchmove", onMove, { passive: false });
-    track.addEventListener("touchend", onEnd);
+    el.addEventListener("touchstart", onStart, { passive: true });
+    el.addEventListener("touchmove", onMove, { passive: false });
+    el.addEventListener("touchend", onEnd);
     return () => {
-      track.removeEventListener("touchstart", onStart);
-      track.removeEventListener("touchmove", onMove);
-      track.removeEventListener("touchend", onEnd);
+      el.removeEventListener("touchstart", onStart);
+      el.removeEventListener("touchmove", onMove);
+      el.removeEventListener("touchend", onEnd);
     };
-  }, [editing1, editing2]);
+  }, [editing1, editing2, onPrev, onNext]);
 
   // --- Section 1 handlers ---
   const handleVoice1 = () => {
@@ -267,164 +259,13 @@ export default function TodayEntry({
     }
   };
 
-  // Panel render functions (plain function calls — not components — prevents remount)
-  const renderPanel1 = () => {
-    if (editing1) {
-      return (
-        <div className="space-y-3">
-          <textarea
-            value={text1}
-            onChange={(e) => setText1(e.target.value)}
-            placeholder="今日はどんな一日でしたか..."
-            className="w-full min-h-[120px] text-sm text-stone-700 leading-relaxed resize-none outline-none placeholder-stone-200"
-            autoFocus
-          />
-          {speech1.listening && speech1.interim && (
-            <p className="text-xs text-stone-300 italic leading-relaxed">{speech1.interim}</p>
-          )}
-          <div className="flex items-center justify-between pt-2 border-t border-stone-50">
-            <div>
-              {speech1.supported && (
-                <button
-                  onClick={handleVoice1}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
-                    speech1.listening ? "bg-red-50 text-red-500" : "bg-stone-100 text-stone-500 hover:bg-stone-200"
-                  }`}
-                >
-                  <MicIcon listening={speech1.listening} />
-                  {speech1.listening ? "録音停止" : "音声入力"}
-                </button>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              {entry && (
-                <button onClick={handleDelete1} className="px-3 py-1.5 text-xs text-stone-300 hover:text-red-400 transition-colors">
-                  削除
-                </button>
-              )}
-              {entry?.text && (
-                <button onClick={handleCancel1} className="px-3 py-1.5 text-xs text-stone-400 hover:text-stone-600 transition-colors">
-                  キャンセル
-                </button>
-              )}
-              <button
-                onClick={handleSave1}
-                disabled={!text1.trim()}
-                className="px-4 py-1.5 bg-stone-800 text-white text-xs rounded-xl disabled:opacity-30 hover:bg-stone-700 active:scale-95 transition-all"
-              >
-                保存
-              </button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    return (
-      <div className="space-y-3">
-        <p className="text-[11px] text-stone-300 tracking-widest">投稿１</p>
-        <p
-          className="text-sm text-stone-700 leading-[1.9] whitespace-pre-wrap cursor-pointer"
-          onClick={() => setEditing1(true)}
-        >
-          {entry?.text}
-        </p>
-        <div className="flex justify-end pt-2 border-t border-stone-50">
-          <button
-            onClick={handleStar1}
-            className={`px-3 py-1.5 text-xs transition-colors ${entry?.starred1 ? "text-amber-400" : "text-stone-300 hover:text-amber-400"}`}
-          >
-            {entry?.starred1 ? "★" : "☆"}
-          </button>
-        </div>
-      </div>
-    );
-  };
-
-  const renderPanel2 = () => {
-    if (editing2) {
-      return (
-        <div className="space-y-3">
-          <textarea
-            value={text2}
-            onChange={(e) => setText2(e.target.value)}
-            placeholder="その他..."
-            className="w-full min-h-[100px] text-sm text-stone-700 leading-relaxed resize-none outline-none placeholder-stone-200"
-            autoFocus
-          />
-          {speech2.listening && speech2.interim && (
-            <p className="text-xs text-stone-300 italic leading-relaxed">{speech2.interim}</p>
-          )}
-          <div className="flex items-center justify-between pt-2 border-t border-stone-50">
-            <div>
-              {speech2.supported && (
-                <button
-                  onClick={handleVoice2}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
-                    speech2.listening ? "bg-red-50 text-red-500" : "bg-stone-100 text-stone-500 hover:bg-stone-200"
-                  }`}
-                >
-                  <MicIcon listening={speech2.listening} />
-                  {speech2.listening ? "録音停止" : "音声入力"}
-                </button>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              {entry?.text2 && (
-                <button onClick={handleDelete2} className="px-3 py-1.5 text-xs text-stone-300 hover:text-red-400 transition-colors">
-                  削除
-                </button>
-              )}
-              {entry?.text2 && (
-                <button onClick={handleCancel2} className="px-3 py-1.5 text-xs text-stone-400 hover:text-stone-600 transition-colors">
-                  キャンセル
-                </button>
-              )}
-              <button
-                onClick={handleSave2}
-                className="px-4 py-1.5 bg-stone-800 text-white text-xs rounded-xl hover:bg-stone-700 active:scale-95 transition-all"
-              >
-                保存
-              </button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    if (entry?.text2) {
-      return (
-        <div className="space-y-3">
-          <p className="text-[11px] text-stone-300 tracking-widest">投稿２</p>
-          <p
-            className="text-sm text-stone-600 leading-[1.9] whitespace-pre-wrap cursor-pointer"
-            onClick={() => setEditing2(true)}
-          >
-            {entry.text2}
-          </p>
-          <div className="flex justify-end pt-2 border-t border-stone-50">
-            <button
-              onClick={handleStar2}
-              className={`px-3 py-1.5 text-xs transition-colors ${entry?.starred2 ? "text-amber-400" : "text-stone-300 hover:text-amber-400"}`}
-            >
-              {entry?.starred2 ? "★" : "☆"}
-            </button>
-          </div>
-        </div>
-      );
-    }
-    return (
-      <button
-        onClick={() => setEditing2(true)}
-        className="text-xs text-stone-300 hover:text-stone-400 transition-colors py-1"
-      >
-        ＋ 追加
-      </button>
-    );
-  };
-
-  // ① No entry and not editing → compact "+" box
+  // No entry and not editing → compact "+" box
   if (!entry && !editing1) {
     return (
-      <div className="bg-white rounded-3xl border border-stone-100 shadow-sm flex items-center justify-center h-[72px]">
+      <div
+        ref={containerRef}
+        className="bg-white rounded-3xl border border-stone-100 shadow-sm flex items-center justify-center h-[72px]"
+      >
         <button
           onClick={() => setEditing1(true)}
           className="w-10 h-10 flex items-center justify-center rounded-full bg-stone-50 text-stone-400 hover:bg-stone-100 hover:text-stone-600 text-xl font-light transition-all active:scale-95"
@@ -435,32 +276,155 @@ export default function TodayEntry({
     );
   }
 
-  const isDragging = dragDelta !== 0;
-
   return (
-    <div ref={containerRef} className="bg-white rounded-3xl p-5 border border-stone-100 shadow-sm">
-      {/* Dot indicators */}
-      <div className="flex justify-center gap-1.5 mb-4">
-        <div className={`w-1.5 h-1.5 rounded-full transition-colors ${currentIdx === 0 ? "bg-stone-400" : "bg-stone-200"}`} />
-        <div className={`w-1.5 h-1.5 rounded-full transition-colors ${currentIdx === 1 ? "bg-stone-400" : "bg-stone-200"}`} />
+    <div ref={containerRef} className="bg-white rounded-3xl p-5 border border-stone-100 shadow-sm space-y-4">
+      {/* Section 1 */}
+      <div>
+        {editing1 ? (
+          <div className="space-y-3">
+            <textarea
+              value={text1}
+              onChange={(e) => setText1(e.target.value)}
+              placeholder="今日はどんな一日でしたか..."
+              className="w-full min-h-[120px] text-sm text-stone-700 leading-relaxed resize-none outline-none placeholder-stone-200"
+              autoFocus
+            />
+            {speech1.listening && speech1.interim && (
+              <p className="text-xs text-stone-300 italic leading-relaxed">{speech1.interim}</p>
+            )}
+            <div className="flex items-center justify-between pt-2 border-t border-stone-50">
+              <div>
+                {speech1.supported && (
+                  <button
+                    onClick={handleVoice1}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
+                      speech1.listening ? "bg-red-50 text-red-500" : "bg-stone-100 text-stone-500 hover:bg-stone-200"
+                    }`}
+                  >
+                    <MicIcon listening={speech1.listening} />
+                    {speech1.listening ? "録音停止" : "音声入力"}
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {entry && (
+                  <button onClick={handleDelete1} className="px-3 py-1.5 text-xs text-stone-300 hover:text-red-400 transition-colors">
+                    削除
+                  </button>
+                )}
+                {entry?.text && (
+                  <button onClick={handleCancel1} className="px-3 py-1.5 text-xs text-stone-400 hover:text-stone-600 transition-colors">
+                    キャンセル
+                  </button>
+                )}
+                <button
+                  onClick={handleSave1}
+                  disabled={!text1.trim()}
+                  className="px-4 py-1.5 bg-stone-800 text-white text-xs rounded-xl disabled:opacity-30 hover:bg-stone-700 active:scale-95 transition-all"
+                >
+                  保存
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-[11px] text-stone-300 tracking-widest">投稿１</p>
+            <p
+              className="text-sm text-stone-700 leading-[1.9] whitespace-pre-wrap cursor-pointer"
+              onClick={() => setEditing1(true)}
+            >
+              {entry?.text}
+            </p>
+            <div className="flex justify-end pt-2 border-t border-stone-50">
+              <button
+                onClick={handleStar1}
+                className={`px-3 py-1.5 text-xs transition-colors ${entry?.starred1 ? "text-amber-400" : "text-stone-300 hover:text-amber-400"}`}
+              >
+                {entry?.starred1 ? "★" : "☆"}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Carousel */}
-      <div ref={trackRef} style={{ overflow: "hidden" }}>
-        <div
-          style={{
-            display: "flex",
-            transform: `translateX(calc(-${currentIdx * 100}% + ${dragDelta}px))`,
-            transition: isDragging ? "none" : "transform 0.3s ease",
-          }}
-        >
-          <div style={{ flexShrink: 0, width: "100%" }}>
-            {renderPanel1()}
+      {/* Divider */}
+      <div className="h-px bg-stone-50" />
+
+      {/* Section 2 */}
+      <div>
+        {editing2 ? (
+          <div className="space-y-3">
+            <textarea
+              value={text2}
+              onChange={(e) => setText2(e.target.value)}
+              placeholder="その他..."
+              className="w-full min-h-[100px] text-sm text-stone-700 leading-relaxed resize-none outline-none placeholder-stone-200"
+              autoFocus
+            />
+            {speech2.listening && speech2.interim && (
+              <p className="text-xs text-stone-300 italic leading-relaxed">{speech2.interim}</p>
+            )}
+            <div className="flex items-center justify-between pt-2 border-t border-stone-50">
+              <div>
+                {speech2.supported && (
+                  <button
+                    onClick={handleVoice2}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
+                      speech2.listening ? "bg-red-50 text-red-500" : "bg-stone-100 text-stone-500 hover:bg-stone-200"
+                    }`}
+                  >
+                    <MicIcon listening={speech2.listening} />
+                    {speech2.listening ? "録音停止" : "音声入力"}
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {entry?.text2 && (
+                  <button onClick={handleDelete2} className="px-3 py-1.5 text-xs text-stone-300 hover:text-red-400 transition-colors">
+                    削除
+                  </button>
+                )}
+                {entry?.text2 && (
+                  <button onClick={handleCancel2} className="px-3 py-1.5 text-xs text-stone-400 hover:text-stone-600 transition-colors">
+                    キャンセル
+                  </button>
+                )}
+                <button
+                  onClick={handleSave2}
+                  className="px-4 py-1.5 bg-stone-800 text-white text-xs rounded-xl hover:bg-stone-700 active:scale-95 transition-all"
+                >
+                  保存
+                </button>
+              </div>
+            </div>
           </div>
-          <div style={{ flexShrink: 0, width: "100%" }}>
-            {renderPanel2()}
+        ) : entry?.text2 ? (
+          <div className="space-y-3">
+            <p className="text-[11px] text-stone-300 tracking-widest">投稿２</p>
+            <p
+              className="text-sm text-stone-600 leading-[1.9] whitespace-pre-wrap cursor-pointer"
+              onClick={() => setEditing2(true)}
+            >
+              {entry.text2}
+            </p>
+            <div className="flex justify-end pt-2 border-t border-stone-50">
+              <button
+                onClick={handleStar2}
+                className={`px-3 py-1.5 text-xs transition-colors ${entry?.starred2 ? "text-amber-400" : "text-stone-300 hover:text-amber-400"}`}
+              >
+                {entry?.starred2 ? "★" : "☆"}
+              </button>
+            </div>
           </div>
-        </div>
+        ) : (
+          <button
+            onClick={() => setEditing2(true)}
+            className="text-xs text-stone-300 hover:text-stone-400 transition-colors py-1"
+          >
+            ＋ 追加
+          </button>
+        )}
       </div>
 
       {/* PhotoViewer */}
@@ -478,8 +442,8 @@ export default function TodayEntry({
       )}
 
       {/* Photos section */}
-      <div className="h-px bg-stone-50 mt-4" />
-      <div className="mt-4">
+      <div className="h-px bg-stone-50" />
+      <div>
         {photos.length > 0 && (
           <div className="grid grid-cols-3 gap-2 mb-3">
             {photos.map((url, i) => (

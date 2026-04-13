@@ -103,7 +103,7 @@ export default function Home() {
                 isToday={isToday}
               />
 
-              <TodayEntry date={date} onSaved={handleRefresh} refreshKey={refreshKey} />
+              <TodayEntry date={date} onSaved={handleRefresh} refreshKey={refreshKey} onPrev={() => goTo(-1)} onNext={() => goTo(1)} />
 
               <RecentEntries date={date} onSelect={handleSelect} refreshKey={refreshKey} />
 

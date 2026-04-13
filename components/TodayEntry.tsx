@@ -104,6 +104,37 @@ export default function TodayEntry({
     };
   }, [editing1, editing2, onPrev, onNext]);
 
+  // Left swipe to cancel editing
+  useEffect(() => {
+    if (!editing1 && !editing2) return;
+    const el = containerRef.current;
+    if (!el) return;
+
+    const startRef = { x: 0, y: 0 };
+
+    const onStart = (e: TouchEvent) => {
+      startRef.x = e.touches[0].clientX;
+      startRef.y = e.touches[0].clientY;
+    };
+    const onEnd = (e: TouchEvent) => {
+      const dx = e.changedTouches[0].clientX - startRef.x;
+      const dy = e.changedTouches[0].clientY - startRef.y;
+      // 明確な左スワイプ（横移動が縦より大きく、60px以上）
+      if (dx < -60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        if (editing1) handleCancel1();
+        else if (editing2) handleCancel2();
+      }
+    };
+
+    el.addEventListener("touchstart", onStart, { passive: true });
+    el.addEventListener("touchend", onEnd, { passive: true });
+    return () => {
+      el.removeEventListener("touchstart", onStart);
+      el.removeEventListener("touchend", onEnd);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editing1, editing2]);
+
   // --- Section 1 handlers ---
   const handleVoice1 = () => {
     if (speech1.listening) speech1.stop();

@@ -37,6 +37,7 @@ export default function Home() {
   const [syncing, setSyncing] = useState(true);
   const [view, setView] = useState<View>("home");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [editTrigger, setEditTrigger] = useState(0);
   const isToday = date === todayStr();
 
   // 起動時に Google Sheets から全データを読み込む
@@ -76,6 +77,14 @@ export default function Home() {
     }
   }, []);
 
+  const handleSelectEdit = useCallback((d: string) => {
+    if (d <= todayStr()) {
+      setDate(d);
+      setView("home");
+      setEditTrigger((k) => k + 1);
+    }
+  }, []);
+
   const handleMenuSelect = useCallback((ym: string) => {
     // Scroll to the month section in ListView after menu closes
     setTimeout(() => {
@@ -103,11 +112,11 @@ export default function Home() {
                 isToday={isToday}
               />
 
-              <TodayEntry date={date} onSaved={handleRefresh} refreshKey={refreshKey} onPrev={() => goTo(-1)} onNext={() => goTo(1)} />
+              <TodayEntry date={date} onSaved={handleRefresh} refreshKey={refreshKey} onPrev={() => goTo(-1)} onNext={() => goTo(1)} startEditing={editTrigger} />
 
               <RecentEntries date={date} onSelect={handleSelect} refreshKey={refreshKey} />
 
-              <MonthCalendars date={date} onSelect={handleSelect} refreshKey={refreshKey} />
+              <MonthCalendars date={date} onSelect={handleSelect} onSelectEdit={handleSelectEdit} refreshKey={refreshKey} />
 
               <PastEntries date={date} refreshKey={refreshKey} onRefresh={handleRefresh} />
             </>

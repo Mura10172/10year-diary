@@ -13,12 +13,14 @@ export default function TodayEntry({
   refreshKey,
   onPrev,
   onNext,
+  startEditing,
 }: {
   date: string;
   onSaved?: () => void;
   refreshKey?: number;
   onPrev?: () => void;
   onNext?: () => void;
+  startEditing?: number;
 }) {
   const [entry, setEntry] = useState<Entry | null>(null);
 
@@ -54,6 +56,11 @@ export default function TodayEntry({
     setPhotos(e?.photos ?? []);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [date, refreshKey]);
+
+  // Open edit mode when triggered externally (calendar double-tap)
+  useEffect(() => {
+    if (startEditing) setEditing1(true);
+  }, [startEditing]);
 
   // Scroll into view when editing starts
   useEffect(() => {

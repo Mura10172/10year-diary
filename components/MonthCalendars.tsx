@@ -23,6 +23,7 @@ function CalGrid({
   selectedDate,
   today,
   onSelect,
+  onSelectEdit,
 }: {
   year: number;
   month: number;
@@ -30,7 +31,9 @@ function CalGrid({
   selectedDate: string;
   today: string;
   onSelect: (d: string) => void;
+  onSelectEdit?: (d: string) => void;
 }) {
+  const lastTapRef = useRef<{ date: string; time: number } | null>(null);
   const firstDow = new Date(year, month - 1, 1).getDay();
   const daysInMonth = new Date(year, month, 0).getDate();
   const cells: (number | null)[] = [
@@ -62,7 +65,19 @@ function CalGrid({
         return (
           <button
             key={day}
-            onClick={() => !isFuture && onSelect(dateStr)}
+            onClick={() => {
+              if (isFuture) return;
+              onSelect(dateStr);
+              // Double-tap detection (mobile)
+              const now = Date.now();
+              if (lastTapRef.current?.date === dateStr && now - lastTapRef.current.time < 350) {
+                onSelectEdit?.(dateStr);
+                lastTapRef.current = null;
+              } else {
+                lastTapRef.current = { date: dateStr, time: now };
+              }
+            }}
+            onDoubleClick={() => !isFuture && onSelectEdit?.(dateStr)}
             disabled={isFuture}
             className={`relative h-8 w-full flex items-center justify-center text-xs rounded-lg transition-all ${
               isSelected
@@ -92,10 +107,12 @@ function CalGrid({
 export default function MonthCalendars({
   date,
   onSelect,
+  onSelectEdit,
   refreshKey,
 }: {
   date: string;
   onSelect: (date: string) => void;
+  onSelectEdit?: (date: string) => void;
   refreshKey: number;
 }) {
   const today = todayStr();
@@ -209,7 +226,7 @@ export default function MonthCalendars({
     ? `translateX(${animTarget}%)`
     : `translateX(calc(-100% + ${dragDelta}px))`;
 
-  const gridProps = { selectedDate: date, today, onSelect };
+  const gridProps = { selectedDate: date, today, onSelect, onSelectEdit };
 
   return (
     <>

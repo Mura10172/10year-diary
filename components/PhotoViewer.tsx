@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Entry } from "@/types";
 
 export default function PhotoViewer({
@@ -15,11 +15,35 @@ export default function PhotoViewer({
   onDelete: (url: string) => void;
   onOpenEntry: () => void;
 }) {
+  const [dragX, setDragX] = useState(0);
+  const touchStartX = useRef(0);
+  const isDragging = useRef(false);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    isDragging.current = true;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging.current) return;
+    const dx = e.touches[0].clientX - touchStartX.current;
+    if (dx > 0) setDragX(dx); // 右方向のみ追従
+  };
+
+  const handleTouchEnd = () => {
+    isDragging.current = false;
+    if (dragX > 80) {
+      onClose();
+    } else {
+      setDragX(0);
+    }
+  };
 
   const handleShare = async () => {
     try {
@@ -53,7 +77,15 @@ export default function PhotoViewer({
   return (
     <div
       className="fixed inset-0 z-[60] flex flex-col bg-black/95"
+      style={{
+        transform: `translateX(${dragX}px)`,
+        transition: dragX === 0 ? "transform 0.25s ease" : "none",
+        opacity: 1 - dragX / 300,
+      }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       {/* Close button */}
       <div className="flex justify-end p-4">

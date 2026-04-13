@@ -124,6 +124,20 @@ export default function ListView({
                           </p>
                         </div>
                       )}
+
+                      {/* 写真 */}
+                      {entry.photos && entry.photos.length > 0 && (
+                        <div className="flex gap-2 mt-3">
+                          {entry.photos.slice(0, 3).map((url, i) => (
+                            <div
+                              key={i}
+                              className="w-[30%] aspect-square rounded-lg overflow-hidden border border-stone-100 flex-shrink-0"
+                            >
+                              <img src={url} alt={`写真${i + 1}`} className="w-full h-full object-cover" />
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </button>
                   );
                 })}

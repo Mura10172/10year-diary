@@ -16,7 +16,7 @@ export default function ListView({
   onRefresh,
   onMenuOpen,
 }: {
-  type: Exclude<View, "home">;
+  type: Exclude<View, "home" | "settings">;
   refreshKey: number;
   onRefresh?: () => void;
   onMenuOpen: () => void;
@@ -46,7 +46,7 @@ export default function ListView({
   }
   const sortedYMs = Object.keys(groups).sort((a, b) => b.localeCompare(a));
 
-  const typeLabels: Record<Exclude<View, "home">, string> = {
+  const typeLabels: Record<Exclude<View, "home" | "settings">, string> = {
     post1: "投稿１",
     post2: "投稿２",
     both: "投稿１と２",

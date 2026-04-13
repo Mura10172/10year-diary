@@ -120,7 +120,7 @@ export default function TodayEntry({
       const dx = e.changedTouches[0].clientX - startRef.x;
       const dy = e.changedTouches[0].clientY - startRef.y;
       // 明確な左スワイプ（横移動が縦より大きく、60px以上）
-      if (dx < -60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      if (dx > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
         if (editing1) handleCancel1();
         else if (editing2) handleCancel2();
       }

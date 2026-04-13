@@ -100,6 +100,15 @@ export default function RecentEntries({
           <p className="text-xs text-stone-500 leading-relaxed h-[7rem] overflow-hidden">
             {entry.text}
           </p>
+          {entry.photos && entry.photos.length > 0 && (
+            <div className="grid grid-cols-3 gap-1 mt-1.5">
+              {entry.photos.slice(0, 3).map((url, i) => (
+                <div key={i} className="aspect-square rounded overflow-hidden">
+                  <img src={url} alt="" className="w-full h-full object-cover" />
+                </div>
+              ))}
+            </div>
+          )}
         </button>
         {/* 投稿２ or blank */}
         {entry.text2 ? (
@@ -111,6 +120,15 @@ export default function RecentEntries({
             <p className="text-xs text-stone-400 leading-relaxed h-[7rem] overflow-hidden">
               {entry.text2}
             </p>
+            {entry.photos && entry.photos.length > 0 && (
+              <div className="grid grid-cols-3 gap-1 mt-1.5">
+                {entry.photos.slice(0, 3).map((url, i) => (
+                  <div key={i} className="aspect-square rounded overflow-hidden">
+                    <img src={url} alt="" className="w-full h-full object-cover" />
+                  </div>
+                ))}
+              </div>
+            )}
           </button>
         ) : (
           <div className="bg-white/40 rounded-2xl border border-stone-50 px-3 py-3">

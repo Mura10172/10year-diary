@@ -1,5 +1,5 @@
 "use client";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import DateNav from "@/components/DateNav";
 import TodayEntry from "@/components/TodayEntry";
 import PastEntries from "@/components/PastEntries";
@@ -43,6 +43,30 @@ export default function Home() {
   const [scrollTrigger, setScrollTrigger] = useState(0);
   const [dictionaryOpen, setDictionaryOpen] = useState(false);
   const isToday = date === todayStr();
+  const swipeRef = useRef<HTMLDivElement>(null);
+
+  // 非ホームビューで左右スワイプ → ホームに戻る
+  useEffect(() => {
+    if (view === "home") return;
+    const el = swipeRef.current;
+    if (!el) return;
+    const start = { x: 0, y: 0 };
+    const onStart = (e: TouchEvent) => { start.x = e.touches[0].clientX; start.y = e.touches[0].clientY; };
+    const onEnd = (e: TouchEvent) => {
+      const dx = e.changedTouches[0].clientX - start.x;
+      const dy = e.changedTouches[0].clientY - start.y;
+      if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        setView("home");
+        setDictionaryOpen(false);
+      }
+    };
+    el.addEventListener("touchstart", onStart, { passive: true });
+    el.addEventListener("touchend", onEnd, { passive: true });
+    return () => {
+      el.removeEventListener("touchstart", onStart);
+      el.removeEventListener("touchend", onEnd);
+    };
+  }, [view]);
 
   // 起動時に Google Sheets から全データを読み込む
   useEffect(() => {
@@ -125,19 +149,23 @@ export default function Home() {
 
               <PastEntries date={date} refreshKey={refreshKey} onRefresh={handleRefresh} />
             </>
-          ) : view === "settings" ? (
-            dictionaryOpen ? (
-              <DictionaryView onBack={() => setDictionaryOpen(false)} />
-            ) : (
-              <SettingsView onOpenDictionary={() => setDictionaryOpen(true)} />
-            )
           ) : (
-            <ListView
-              type={view}
-              refreshKey={refreshKey}
-              onRefresh={handleRefresh}
-              onMenuOpen={() => setMenuOpen(true)}
-            />
+            <div ref={swipeRef}>
+              {view === "settings" ? (
+                dictionaryOpen ? (
+                  <DictionaryView onBack={() => setDictionaryOpen(false)} />
+                ) : (
+                  <SettingsView onOpenDictionary={() => setDictionaryOpen(true)} />
+                )
+              ) : (
+                <ListView
+                  type={view}
+                  refreshKey={refreshKey}
+                  onRefresh={handleRefresh}
+                  onMenuOpen={() => setMenuOpen(true)}
+                />
+              )}
+            </div>
           )}
         </div>
       </main>

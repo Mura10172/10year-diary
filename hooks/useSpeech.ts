@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useEffect, useCallback } from "react";
+import { applyDictionary } from "@/lib/dictionary";
 
 export function useSpeech() {
   const [listening, setListening] = useState(false);
@@ -29,7 +30,7 @@ export function useSpeech() {
         else interimText += e.results[i][0].transcript;
       }
       if (final) {
-        callbackRef.current?.(final);
+        callbackRef.current?.(applyDictionary(final));
         setInterim("");
       } else {
         setInterim(interimText);

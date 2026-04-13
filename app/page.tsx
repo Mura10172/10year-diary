@@ -9,6 +9,8 @@ import BottomNav from "@/components/BottomNav";
 import type { View } from "@/components/BottomNav";
 import ListView from "@/components/ListView";
 import SideMenu from "@/components/SideMenu";
+import SettingsView from "@/components/SettingsView";
+import DictionaryView from "@/components/DictionaryView";
 import { saveEntry, clearAllEntries } from "@/lib/storage";
 import { Entry } from "@/types";
 
@@ -38,6 +40,7 @@ export default function Home() {
   const [view, setView] = useState<View>("home");
   const [menuOpen, setMenuOpen] = useState(false);
   const [editTrigger, setEditTrigger] = useState(0);
+  const [dictionaryOpen, setDictionaryOpen] = useState(false);
   const isToday = date === todayStr();
 
   // 起動時に Google Sheets から全データを読み込む
@@ -120,6 +123,12 @@ export default function Home() {
 
               <PastEntries date={date} refreshKey={refreshKey} onRefresh={handleRefresh} />
             </>
+          ) : view === "settings" ? (
+            dictionaryOpen ? (
+              <DictionaryView onBack={() => setDictionaryOpen(false)} />
+            ) : (
+              <SettingsView onOpenDictionary={() => setDictionaryOpen(true)} />
+            )
           ) : (
             <ListView
               type={view}
@@ -131,7 +140,7 @@ export default function Home() {
         </div>
       </main>
 
-      <BottomNav view={view} onChangeView={setView} />
+      <BottomNav view={view} onChangeView={(v) => { setView(v); setDictionaryOpen(false); }} />
 
       {menuOpen && (
         <SideMenu

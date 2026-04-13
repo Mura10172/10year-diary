@@ -116,7 +116,7 @@ export default function EntryModal({
           {editing ? (
             <>
               <div>
-                <p className="text-[11px] text-stone-300 tracking-widest mb-2">日記</p>
+                <p className="text-[11px] text-stone-300 tracking-widest mb-2">投稿１</p>
                 <textarea
                   value={text1}
                   onChange={(e) => setText1(e.target.value)}
@@ -129,11 +129,11 @@ export default function EntryModal({
               </div>
               <div className="h-px bg-stone-50" />
               <div>
-                <p className="text-[11px] text-stone-300 tracking-widest mb-2">気づき</p>
+                <p className="text-[11px] text-stone-300 tracking-widest mb-2">投稿２</p>
                 <textarea
                   value={text2}
                   onChange={(e) => setText2(e.target.value)}
-                  placeholder="日記からの気づき..."
+                  placeholder="その他..."
                   className="w-full min-h-[80px] text-sm text-stone-600 leading-[1.9] resize-none outline-none placeholder-stone-200"
                 />
               </div>
@@ -141,15 +141,25 @@ export default function EntryModal({
           ) : (
             <>
               <div>
-                <p className="text-[11px] text-stone-300 tracking-widest mb-2">日記</p>
-                <p className="text-sm text-stone-700 leading-[1.9] whitespace-pre-wrap">{entry.text}</p>
+                <p className="text-[11px] text-stone-300 tracking-widest mb-2">投稿１</p>
+                <p
+                  className="text-sm text-stone-700 leading-[1.9] whitespace-pre-wrap cursor-pointer"
+                  onClick={() => setEditing(true)}
+                >
+                  {entry.text}
+                </p>
               </div>
               {entry.text2 && (
                 <>
                   <div className="h-px bg-stone-50" />
                   <div>
-                    <p className="text-[11px] text-stone-300 tracking-widest mb-2">気づき</p>
-                    <p className="text-sm text-stone-600 leading-[1.9] whitespace-pre-wrap">{entry.text2}</p>
+                    <p className="text-[11px] text-stone-300 tracking-widest mb-2">投稿２</p>
+                    <p
+                      className="text-sm text-stone-600 leading-[1.9] whitespace-pre-wrap cursor-pointer"
+                      onClick={() => setEditing(true)}
+                    >
+                      {entry.text2}
+                    </p>
                   </div>
                 </>
               )}
@@ -175,7 +185,7 @@ export default function EntryModal({
         <div className="px-6 pb-5 pt-3 border-t border-stone-50">
           {editing ? (
             <div className="flex items-center justify-between">
-              <div>
+              <div className="flex items-center gap-1">
                 {supported && (
                   <button
                     onClick={handleVoice}
@@ -192,6 +202,19 @@ export default function EntryModal({
               </div>
               <div className="flex items-center gap-2">
                 <button
+                  onClick={handleDelete}
+                  className="px-3 py-1.5 text-xs text-stone-300 hover:text-red-400 transition-colors"
+                >
+                  削除
+                </button>
+                <button
+                  onClick={handleStar1}
+                  className={`px-2 py-1.5 text-sm transition-colors ${entry.starred1 ? "text-amber-400" : "text-stone-300 hover:text-amber-400"}`}
+                  title="投稿１★"
+                >
+                  {entry.starred1 ? "★" : "☆"}
+                </button>
+                <button
                   onClick={handleCancelEdit}
                   className="px-3 py-1.5 text-xs text-stone-400 hover:text-stone-600 transition-colors"
                 >
@@ -207,35 +230,21 @@ export default function EntryModal({
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-end gap-1">
+              <span className="text-[11px] text-stone-300 mr-0.5">投稿１</span>
               <button
-                onClick={handleDelete}
-                className="px-3 py-1.5 text-xs text-stone-300 hover:text-red-400 transition-colors"
+                onClick={handleStar1}
+                className={`px-2 py-1.5 text-sm transition-colors ${entry.starred1 ? "text-amber-400" : "text-stone-300 hover:text-amber-400"}`}
               >
-                削除
+                {entry.starred1 ? "★" : "☆"}
               </button>
-              <div className="flex items-center gap-1">
-                <span className="text-[11px] text-stone-300 mr-1">投稿１</span>
-                <button
-                  onClick={handleStar1}
-                  className={`px-2 py-1.5 text-sm transition-colors ${entry.starred1 ? "text-amber-400" : "text-stone-300 hover:text-amber-400"}`}
-                >
-                  {entry.starred1 ? "★" : "☆"}
-                </button>
-                <span className="text-[11px] text-stone-300 ml-2 mr-1">投稿２</span>
-                <button
-                  onClick={handleStar2}
-                  className={`px-2 py-1.5 text-sm transition-colors ${entry.starred2 ? "text-amber-400" : "text-stone-300 hover:text-amber-400"}`}
-                >
-                  {entry.starred2 ? "★" : "☆"}
-                </button>
-                <button
-                  onClick={() => setEditing(true)}
-                  className="ml-3 px-4 py-1.5 bg-stone-100 text-stone-600 text-xs rounded-xl hover:bg-stone-200 transition-all"
-                >
-                  編集
-                </button>
-              </div>
+              <span className="text-[11px] text-stone-300 ml-2 mr-0.5">投稿２</span>
+              <button
+                onClick={handleStar2}
+                className={`px-2 py-1.5 text-sm transition-colors ${entry.starred2 ? "text-amber-400" : "text-stone-300 hover:text-amber-400"}`}
+              >
+                {entry.starred2 ? "★" : "☆"}
+              </button>
             </div>
           )}
         </div>

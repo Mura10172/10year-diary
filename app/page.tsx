@@ -9,7 +9,6 @@ import BottomNav from "@/components/BottomNav";
 import type { View } from "@/components/BottomNav";
 import ListView from "@/components/ListView";
 import SideMenu from "@/components/SideMenu";
-import HomeMenu from "@/components/HomeMenu";
 import { saveEntry, clearAllEntries } from "@/lib/storage";
 import { Entry } from "@/types";
 
@@ -38,7 +37,6 @@ export default function Home() {
   const [syncing, setSyncing] = useState(true);
   const [view, setView] = useState<View>("home");
   const [menuOpen, setMenuOpen] = useState(false);
-  const [homeMenuOpen, setHomeMenuOpen] = useState(false);
   const isToday = date === todayStr();
 
   // 起動時に Google Sheets から全データを読み込む
@@ -97,18 +95,6 @@ export default function Home() {
                 </p>
               )}
 
-              <div className="flex justify-end -mt-2 mb-1">
-                <button
-                  onClick={() => setHomeMenuOpen(true)}
-                  className="w-9 h-9 flex items-center justify-center text-stone-400 hover:text-stone-600 rounded-xl hover:bg-stone-100 transition-all"
-                  aria-label="メニュー"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-                </button>
-              </div>
-
               <DateNav
                 date={date}
                 onPrev={() => goTo(-1)}
@@ -137,13 +123,6 @@ export default function Home() {
       </main>
 
       <BottomNav view={view} onChangeView={setView} />
-
-      {homeMenuOpen && (
-        <HomeMenu
-          onClose={() => setHomeMenuOpen(false)}
-          onSelect={(v) => { setView(v); setHomeMenuOpen(false); }}
-        />
-      )}
 
       {menuOpen && (
         <SideMenu

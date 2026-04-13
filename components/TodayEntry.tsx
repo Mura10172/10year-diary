@@ -28,6 +28,16 @@ export default function TodayEntry({
   const [editing2, setEditing2] = useState(false);
   const speech2 = useSpeech();
 
+  // Scroll into view when editing starts
+  const containerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (editing1 || editing2) {
+      setTimeout(() => {
+        containerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 50);
+    }
+  }, [editing1, editing2]);
+
   // Carousel state
   const [currentIdx, setCurrentIdx] = useState(0);
   const [dragDelta, setDragDelta] = useState(0);
@@ -428,7 +438,7 @@ export default function TodayEntry({
   const isDragging = dragDelta !== 0;
 
   return (
-    <div className="bg-white rounded-3xl p-5 border border-stone-100 shadow-sm">
+    <div ref={containerRef} className="bg-white rounded-3xl p-5 border border-stone-100 shadow-sm">
       {/* Dot indicators */}
       <div className="flex justify-center gap-1.5 mb-4">
         <div className={`w-1.5 h-1.5 rounded-full transition-colors ${currentIdx === 0 ? "bg-stone-400" : "bg-stone-200"}`} />

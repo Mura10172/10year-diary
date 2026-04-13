@@ -286,7 +286,7 @@ export default function TodayEntry({
               value={text1}
               onChange={(e) => setText1(e.target.value)}
               placeholder="今日はどんな一日でしたか..."
-              className="w-full min-h-[120px] text-sm text-stone-700 leading-relaxed resize-none outline-none placeholder-stone-200"
+              className="w-full min-h-[240px] text-sm text-stone-700 leading-relaxed resize-none outline-none placeholder-stone-200"
               autoFocus
             />
             {speech1.listening && speech1.interim && (
@@ -332,7 +332,7 @@ export default function TodayEntry({
             <p className="text-[11px] text-stone-300 tracking-widest">投稿１</p>
             <p
               className="text-sm text-stone-700 leading-[1.9] whitespace-pre-wrap cursor-pointer"
-              onClick={() => setEditing1(true)}
+              onClick={() => { if (editing2) { setText2(entry?.text2 ?? ""); setEditing2(false); speech2.stop(); } setEditing1(true); }}
             >
               {entry?.text}
             </p>
@@ -359,7 +359,7 @@ export default function TodayEntry({
               value={text2}
               onChange={(e) => setText2(e.target.value)}
               placeholder="その他..."
-              className="w-full min-h-[100px] text-sm text-stone-700 leading-relaxed resize-none outline-none placeholder-stone-200"
+              className="w-full min-h-[200px] text-sm text-stone-700 leading-relaxed resize-none outline-none placeholder-stone-200"
               autoFocus
             />
             {speech2.listening && speech2.interim && (
@@ -404,7 +404,7 @@ export default function TodayEntry({
             <p className="text-[11px] text-stone-300 tracking-widest">投稿２</p>
             <p
               className="text-sm text-stone-600 leading-[1.9] whitespace-pre-wrap cursor-pointer"
-              onClick={() => setEditing2(true)}
+              onClick={() => { if (editing1) { setText1(entry?.text ?? ""); setEditing1(false); speech1.stop(); } setEditing2(true); }}
             >
               {entry.text2}
             </p>
@@ -419,7 +419,7 @@ export default function TodayEntry({
           </div>
         ) : (
           <button
-            onClick={() => setEditing2(true)}
+            onClick={() => { if (editing1) { setText1(entry?.text ?? ""); setEditing1(false); speech1.stop(); } setEditing2(true); }}
             className="text-xs text-stone-300 hover:text-stone-400 transition-colors py-1"
           >
             ＋ 追加

@@ -14,6 +14,7 @@ export default function TodayEntry({
   onPrev,
   onNext,
   startEditing,
+  scrollTrigger,
 }: {
   date: string;
   onSaved?: () => void;
@@ -21,6 +22,7 @@ export default function TodayEntry({
   onPrev?: () => void;
   onNext?: () => void;
   startEditing?: number;
+  scrollTrigger?: number;
 }) {
   const [entry, setEntry] = useState<Entry | null>(null);
 
@@ -61,6 +63,15 @@ export default function TodayEntry({
   useEffect(() => {
     if (startEditing) setEditing1(true);
   }, [startEditing]);
+
+  // Scroll into view when a past entry is selected (RecentEntries tap)
+  useEffect(() => {
+    if (scrollTrigger) {
+      setTimeout(() => {
+        containerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 50);
+    }
+  }, [scrollTrigger]);
 
   // Scroll into view when editing starts
   useEffect(() => {

@@ -40,6 +40,7 @@ export default function Home() {
   const [view, setView] = useState<View>("home");
   const [menuOpen, setMenuOpen] = useState(false);
   const [editTrigger, setEditTrigger] = useState(0);
+  const [scrollTrigger, setScrollTrigger] = useState(0);
   const [dictionaryOpen, setDictionaryOpen] = useState(false);
   const isToday = date === todayStr();
 
@@ -77,6 +78,7 @@ export default function Home() {
     if (d <= todayStr()) {
       setDate(d);
       setView("home");
+      setScrollTrigger((k) => k + 1);
     }
   }, []);
 
@@ -115,7 +117,7 @@ export default function Home() {
                 isToday={isToday}
               />
 
-              <TodayEntry date={date} onSaved={handleRefresh} refreshKey={refreshKey} onPrev={() => goTo(-1)} onNext={() => goTo(1)} startEditing={editTrigger} />
+              <TodayEntry date={date} onSaved={handleRefresh} refreshKey={refreshKey} onPrev={() => goTo(-1)} onNext={() => goTo(1)} startEditing={editTrigger} scrollTrigger={scrollTrigger} />
 
               <RecentEntries date={date} onSelect={handleSelect} refreshKey={refreshKey} />
 

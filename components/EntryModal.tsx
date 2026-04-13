@@ -5,6 +5,7 @@ import { syncSave, syncDelete } from "@/lib/syncToSheets";
 import { useSpeech } from "@/hooks/useSpeech";
 import { formatJapanese } from "@/components/DateNav";
 import { Entry } from "@/types";
+import PhotoViewer from "@/components/PhotoViewer";
 
 export default function EntryModal({
   entry: initialEntry,
@@ -15,6 +16,7 @@ export default function EntryModal({
 }) {
   const [entry, setEntry] = useState(initialEntry);
   const [editing, setEditing] = useState(false);
+  const [viewingPhoto, setViewingPhoto] = useState<string | null>(null);
   const [text1, setText1] = useState(initialEntry.text);
   const [text2, setText2] = useState(initialEntry.text2 ?? "");
   const { listening, interim, supported, start, stop } = useSpeech();
@@ -54,6 +56,14 @@ export default function EntryModal({
     syncDelete(entry.date);
     stop();
     onClose();
+  };
+
+  const handlePhotoDelete = (url: string) => {
+    const newPhotos = (entry.photos ?? []).filter((p) => p !== url);
+    const updated = { ...entry, photos: newPhotos.length > 0 ? newPhotos : undefined, updatedAt: Date.now() };
+    saveEntry(updated);
+    syncSave(updated);
+    setEntry(updated);
   };
 
   const handleCancelEdit = () => {
@@ -145,6 +155,20 @@ export default function EntryModal({
               )}
             </>
           )}
+          {/* Photos */}
+          {!editing && entry.photos && entry.photos.length > 0 && (
+            <div className="grid grid-cols-3 gap-2">
+              {entry.photos.map((url, i) => (
+                <button
+                  key={i}
+                  onClick={() => setViewingPhoto(url)}
+                  className="w-full aspect-square rounded-xl overflow-hidden border border-stone-100"
+                >
+                  <img src={url} alt={`写真${i + 1}`} className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Footer */}
@@ -216,6 +240,15 @@ export default function EntryModal({
           )}
         </div>
       </div>
+    {viewingPhoto && (
+      <PhotoViewer
+        url={viewingPhoto}
+        entry={entry}
+        onClose={() => setViewingPhoto(null)}
+        onDelete={handlePhotoDelete}
+        onOpenEntry={() => setViewingPhoto(null)}
+      />
+    )}
     </div>
   );
 }

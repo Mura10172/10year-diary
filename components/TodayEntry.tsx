@@ -5,6 +5,7 @@ import { syncSave, syncDelete } from "@/lib/syncToSheets";
 import { useSpeech } from "@/hooks/useSpeech";
 import { Entry } from "@/types";
 import { uploadPhoto } from "@/lib/uploadPhoto";
+import PhotoViewer from "@/components/PhotoViewer";
 
 export default function TodayEntry({
   date,
@@ -43,6 +44,7 @@ export default function TodayEntry({
   // Photos state
   const [photos, setPhotos] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [viewingPhoto, setViewingPhoto] = useState<string | null>(null);
 
   // --- Section 1 handlers ---
   const handleVoice1 = () => {
@@ -356,25 +358,36 @@ export default function TodayEntry({
           </button>
         )}
       </div>
+      {viewingPhoto && entry && (
+        <PhotoViewer
+          url={viewingPhoto}
+          entry={entry}
+          onClose={() => setViewingPhoto(null)}
+          onDelete={(url) => {
+            const idx = photos.indexOf(url);
+            if (idx >= 0) handlePhotoRemove(idx);
+          }}
+          onOpenEntry={() => setViewingPhoto(null)}
+        />
+      )}
+
       {/* Photos section */}
       <div className="h-px bg-stone-50" />
       <div>
         {photos.length > 0 && (
           <div className="grid grid-cols-3 gap-2 mb-3">
             {photos.map((url, i) => (
-              <div key={i} className="relative group">
+              <button
+                key={i}
+                onClick={() => setViewingPhoto(url)}
+                className="w-full aspect-square rounded-xl overflow-hidden border border-stone-100"
+              >
                 <img
                   src={url}
                   alt={`写真${i + 1}`}
-                  className="w-full aspect-square object-cover rounded-xl border border-stone-100"
+                  className="w-full h-full object-cover"
                 />
-                <button
-                  onClick={() => handlePhotoRemove(i)}
-                  className="absolute top-1 right-1 w-5 h-5 bg-black/50 text-white rounded-full text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  ✕
-                </button>
-              </div>
+              </button>
             ))}
           </div>
         )}

@@ -34,8 +34,8 @@ export default function TodayEntry({
     setEntry(e);
     setText1(e?.text ?? "");
     setText2(e?.text2 ?? "");
-    setEditing1(!e?.text);
-    setEditing2(!e?.text2);
+    setEditing1(!e);
+    setEditing2(false);
     setPhotos(e?.photos ?? []);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [date, refreshKey]);
@@ -329,7 +329,7 @@ export default function TodayEntry({
               </div>
             </div>
           </div>
-        ) : (
+        ) : entry?.text2 ? (
           <div className="space-y-3">
             <p className="text-sm text-stone-600 leading-[1.9] whitespace-pre-wrap">{entry?.text2}</p>
             <div className="flex justify-end gap-1 pt-2 border-t border-stone-50">
@@ -347,6 +347,13 @@ export default function TodayEntry({
               </button>
             </div>
           </div>
+        ) : (
+          <button
+            onClick={() => setEditing2(true)}
+            className="text-xs text-stone-300 hover:text-stone-400 transition-colors py-1"
+          >
+            ＋ 追加
+          </button>
         )}
       </div>
       {/* Photos section */}

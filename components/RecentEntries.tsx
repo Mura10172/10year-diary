@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { getAllEntries } from "@/lib/storage";
 import { Entry } from "@/types";
+import PhotoViewer from "@/components/PhotoViewer";
 
 function todayStr(): string {
   const d = new Date();
@@ -23,6 +24,7 @@ export default function RecentEntries({
 }) {
   // entries: newest first
   const [entries, setEntries] = useState<Entry[]>([]);
+  const [photoState, setPhotoState] = useState<{ url: string; entry: Entry } | null>(null);
   // currentIdx: index into trackEntries (oldest-first). right-swipe → older (idx--)
   const [currentIdx, setCurrentIdx] = useState(0);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
@@ -92,7 +94,11 @@ export default function RecentEntries({
     const photoGrid = entry.photos && entry.photos.length > 0 ? (
       <div className="grid grid-cols-3 gap-1 mt-1 shrink-0">
         {entry.photos.slice(0, 3).map((url: string, i: number) => (
-          <div key={i} className="h-7 rounded overflow-hidden">
+          <div
+            key={i}
+            className="h-7 rounded overflow-hidden cursor-pointer"
+            onClick={(e) => { e.stopPropagation(); setPhotoState({ url, entry }); }}
+          >
             <img src={url} alt="" className="w-full h-full object-cover" />
           </div>
         ))}
@@ -100,8 +106,8 @@ export default function RecentEntries({
     ) : null;
     return (
       <div key={colKey} style={{ minWidth: "50%", padding: "0 4px" }} className="flex flex-col gap-2">
-        {/* 投稿１ */}
-        {entry.text && (
+        {/* 投稿１ (invisible spacer when no text to keep 投稿２ at bottom) */}
+        {entry.text ? (
           <button
             onClick={() => onSelect(entry.date)}
             className="text-left bg-white rounded-2xl px-3 py-3 border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all duration-150 h-[8.5rem] flex flex-col overflow-hidden"
@@ -110,6 +116,8 @@ export default function RecentEntries({
             <p className="text-xs text-stone-500 leading-relaxed flex-1 overflow-hidden">{entry.text}</p>
             {photoGrid}
           </button>
+        ) : (
+          <div className="h-[8.5rem]" />
         )}
         {/* 投稿２ */}
         {entry.text2 && (
@@ -172,5 +180,15 @@ export default function RecentEntries({
         </div>
       </div>
     </section>
+
+      {photoState && (
+        <PhotoViewer
+          url={photoState.url}
+          entry={photoState.entry}
+          onClose={() => setPhotoState(null)}
+          onDelete={() => {}}
+          onOpenEntry={() => { setPhotoState(null); onSelect(photoState.entry.date); }}
+        />
+      )}
   );
 }

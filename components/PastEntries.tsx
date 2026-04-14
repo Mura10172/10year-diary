@@ -143,7 +143,7 @@ export default function PastEntries({
           <div className="h-[8.5rem] bg-white/60 rounded-2xl border border-stone-50" />
         )}
         {/* 投稿２ */}
-        {entry?.text2 ? (
+        {entry?.text2 && (
           <button
             onClick={() => setSelected(entry)}
             className="text-left bg-white rounded-2xl px-3 py-3 border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all duration-150 overflow-hidden"

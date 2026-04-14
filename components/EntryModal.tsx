@@ -23,6 +23,24 @@ export default function EntryModal({
   const [text2, setText2] = useState(initialEntry.text2 ?? "");
   const { listening, interim, supported, start, stop } = useSpeech();
   const modalRef = useRef<HTMLDivElement>(null);
+  const textarea1Ref = useRef<HTMLTextAreaElement>(null);
+  const textarea2Ref = useRef<HTMLTextAreaElement>(null);
+
+  const autoResize = (el: HTMLTextAreaElement | null) => {
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = el.scrollHeight + "px";
+  };
+
+  useEffect(() => {
+    if (editing) {
+      autoResize(textarea1Ref.current);
+      autoResize(textarea2Ref.current);
+    }
+  }, [editing]);
+
+  useEffect(() => { autoResize(textarea1Ref.current); }, [text1]);
+  useEffect(() => { autoResize(textarea2Ref.current); }, [text2]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -151,7 +169,9 @@ export default function EntryModal({
                 <textarea
                   value={text1}
                   onChange={(e) => setText1(e.target.value)}
-                  className="w-full min-h-[140px] text-sm text-stone-700 leading-[1.9] resize-none outline-none"
+                  ref={textarea1Ref}
+                  style={{ overflow: "hidden" }}
+                  className="w-full min-h-[8rem] text-sm text-stone-700 leading-[1.9] resize-none outline-none"
                   autoFocus
                 />
                 {listening && interim && (
@@ -165,7 +185,9 @@ export default function EntryModal({
                   value={text2}
                   onChange={(e) => setText2(e.target.value)}
                   placeholder="その他..."
-                  className="w-full min-h-[80px] text-sm text-stone-600 leading-[1.9] resize-none outline-none placeholder-stone-200"
+                  ref={textarea2Ref}
+                  style={{ overflow: "hidden" }}
+                  className="w-full min-h-[8rem] text-sm text-stone-600 leading-[1.9] resize-none outline-none placeholder-stone-200"
                 />
               </div>
             </>

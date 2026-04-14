@@ -1,6 +1,5 @@
 ﻿"use client";
 
-function cleanText(text: string): string { return text.replace(/\n{2,}/g, "\n").trim(); }
 import { useState, useEffect, useRef } from "react";
 import { saveEntry, deleteEntry } from "@/lib/storage";
 import { syncSave, syncDelete } from "@/lib/syncToSheets";
@@ -15,6 +14,8 @@ export default function EntryModal({
 }: {
   entry: Entry;
   onClose: () => void;
+
+function cleanText(text: string): string { return text.replace(/\n{2,}/g, "\n").trim(); }
 }) {
   const [entry, setEntry] = useState(initialEntry);
   const [editing, setEditing] = useState(false);

@@ -1,6 +1,5 @@
 ﻿"use client";
 
-function cleanText(text: string): string { return text.replace(/\n{2,}/g, "\n").trim(); }
 import { useState, useEffect } from "react";
 import { getAllEntries } from "@/lib/storage";
 import { Entry } from "@/types";
@@ -11,6 +10,8 @@ function formatYM(ym: string): string {
   const [y, m] = ym.split("-").map(Number);
   return `${y}年${m}月`;
 }
+
+function cleanText(text: string): string { return text.replace(/\n{2,}/g, "\n").trim(); }
 
 export default function ListView({
   type,

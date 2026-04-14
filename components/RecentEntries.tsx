@@ -1,6 +1,5 @@
 ﻿"use client";
 
-function cleanText(text: string): string { return text.replace(/\n{2,}/g, "\n").trim(); }
 import { useState, useEffect } from "react";
 import { getAllEntries } from "@/lib/storage";
 import { Entry } from "@/types";
@@ -9,6 +8,8 @@ import PhotoViewer from "@/components/PhotoViewer";
 function todayStr(): string {
   const d = new Date();
   return [
+
+function cleanText(text: string): string { return text.replace(/\n{2,}/g, "\n").trim(); }
     d.getFullYear(),
     String(d.getMonth() + 1).padStart(2, "0"),
     String(d.getDate()).padStart(2, "0"),

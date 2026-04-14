@@ -4,6 +4,13 @@ import { getAllEntries } from "@/lib/storage";
 import { Entry } from "@/types";
 import EntryModal from "@/components/EntryModal";
 
+// 連続改行を1つに圧縮（ブランク行を除去）
+function cleanText(text: string): string {
+  return text.replace(/
+{2,}/g, "
+").trim();
+}
+
 function todayDateKey(): string {
   const d = new Date();
   return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
@@ -45,11 +52,11 @@ export default function DailyStar({ refreshKey }: { refreshKey: number }) {
             <span className="text-xs text-amber-400">★</span>
           </div>
           {showText1 && (
-            <p className="text-xs text-stone-600 leading-relaxed line-clamp-4">{entry.text}</p>
+            <p className="text-xs text-stone-600 leading-relaxed line-clamp-4 whitespace-pre-line">{cleanText(entry.text)}</p>
           )}
           {showText2 && (
-            <p className={`text-xs text-stone-500 leading-relaxed line-clamp-4 ${showText1 ? "mt-2" : ""}`}>
-              {entry.text2}
+            <p className={`text-xs text-stone-500 leading-relaxed line-clamp-4 whitespace-pre-line ${showText1 ? "mt-2" : ""}`}>
+              {cleanText(entry.text2!)}
             </p>
           )}
         </button>

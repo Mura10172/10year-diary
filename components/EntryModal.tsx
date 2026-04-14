@@ -7,7 +7,6 @@ import { formatJapanese } from "@/components/DateNav";
 import { Entry } from "@/types";
 import PhotoViewer from "@/components/PhotoViewer";
 
-function cleanText(text: string): string { return text.replace(/\n{2,}/g, "\n").trim(); }
 
 export default function EntryModal({
   entry: initialEntry,
@@ -204,7 +203,7 @@ export default function EntryModal({
                   className="text-sm text-stone-700 leading-[1.9] whitespace-pre-wrap cursor-pointer"
                   onClick={() => { setFocusField("text1"); setEditing(true); }}
                 >
-                  {cleanText(entry.text)}
+                  {entry.text}
                 </p>
               </div>
               {entry.text2 && (
@@ -216,7 +215,7 @@ export default function EntryModal({
                       className="text-sm text-stone-600 leading-[1.9] whitespace-pre-wrap cursor-pointer"
                       onClick={() => { setFocusField("text2"); setEditing(true); }}
                     >
-                      {cleanText(entry.text2)}
+                      {entry.text2}
                     </p>
                   </div>
                 </>

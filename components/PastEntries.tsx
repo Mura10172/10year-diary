@@ -159,7 +159,7 @@ export default function PastEntries({
                 <span className="text-[11px] text-stone-300">{currentYear - year}蟷ｴ蜑・/span>
               </div>
             )}
-            <p className="text-xs text-stone-300 leading-relaxed line-clamp-4 whitespace-pre-line">{cleanText(entry.text2)}</p>
+            <p className="text-xs text-stone-300 leading-relaxed line-clamp-4">{cleanText(entry.text2).split(String.fromCharCode(10)).flatMap((l, i) => i === 0 ? [l] : [<br key={i} />, l])}</p>
           </button>
         )}
       </div>

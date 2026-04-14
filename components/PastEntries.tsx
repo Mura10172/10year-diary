@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect } from "react";
 import { getAllEntries } from "@/lib/storage";
 import { Entry } from "@/types";
@@ -55,8 +55,7 @@ export default function PastEntries({
 
   const currentYear = parseInt(date.split("-")[0]);
   const [, m, d] = date.split("-").map(Number);
-  const maxYears = currentYear - 1972; // 1972年まで遡る
-
+  const maxYears = currentYear - 1972; // 1972蟷ｴ縺ｾ縺ｧ驕｡繧・
   useEffect(() => {
     setCurrentIdx(0);
     setSelected(null);
@@ -109,7 +108,7 @@ export default function PastEntries({
     if (!col) return <div key={colKey} style={{ minWidth: "50%", padding: "0 4px" }} />;
     const { year, entry } = col;
     const label = entry
-      ? (() => { const [, em, ed] = entry.date.split("-").map(Number); return `${em}月${ed}日`; })()
+      ? (() => { const [, em, ed] = entry.date.split("-").map(Number); return `${em}譛・{ed}譌･`; })()
       : "";
     const photoGrid = entry?.photos && entry.photos.length > 0 ? (
       <div className="grid grid-cols-3 gap-1 mt-1 shrink-0">
@@ -126,23 +125,27 @@ export default function PastEntries({
     ) : null;
     return (
       <div key={colKey} style={{ minWidth: "50%", padding: "0 4px" }} className="flex flex-col gap-2">
-        {/* 投稿１ (invisible spacer when no entry to keep 投稿２ at bottom) */}
+        {/* 謚慕ｨｿ・・(invisible spacer when no entry to keep 謚慕ｨｿ・・at bottom) */}
         {entry ? (
           <button
             onClick={() => setSelected(entry)}
             className="text-left bg-white rounded-2xl px-3 py-3 border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all duration-150 overflow-hidden"
           >
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[11px] font-medium text-stone-500">{year}年{label}</span>
-              <span className="text-[11px] text-stone-300">{currentYear - year}年前</span>
-            </div>
-            <p className="text-xs text-stone-400 leading-relaxed line-clamp-4">{entry.text}</p>
+            {!!entry.text && (
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[11px] font-medium text-stone-500">{year}年{label}</span>
+                <span className="text-[11px] text-stone-300">{currentYear - year}年前</span>
+              </div>
+            )}
+            {!!entry.text && (
+              <p className="text-xs text-stone-400 leading-relaxed line-clamp-4">{entry.text}</p>
+            )}
             {photoGrid}
           </button>
         ) : (
           <div className="h-[8.5rem] bg-white/60 rounded-2xl border border-stone-50" />
         )}
-        {/* 投稿２ */}
+        {/* 謚慕ｨｿ・・*/}
         {entry?.text2 && (
           <button
             onClick={() => setSelected(entry)}
@@ -150,8 +153,8 @@ export default function PastEntries({
           >
             {!entry.text && (
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[11px] font-medium text-stone-500">{year}年{label}</span>
-                <span className="text-[11px] text-stone-300">{currentYear - year}年前</span>
+                <span className="text-[11px] font-medium text-stone-500">{year}蟷ｴ{label}</span>
+                <span className="text-[11px] text-stone-300">{currentYear - year}蟷ｴ蜑・/span>
               </div>
             )}
             <p className="text-xs text-stone-300 leading-relaxed line-clamp-4">{entry.text2}</p>
@@ -173,17 +176,17 @@ export default function PastEntries({
               disabled={!canOlder}
               className="w-5 h-5 flex items-center justify-center text-stone-300 hover:text-stone-500 disabled:opacity-30 text-sm leading-none"
             >
-              ‹
+              窶ｹ
             </button>
             <p className="text-xs text-stone-300 tracking-widest whitespace-nowrap">
-              過去のこの日に近い投稿
+              驕主悉縺ｮ縺薙・譌･縺ｫ霑代＞謚慕ｨｿ
             </p>
             <button
               onClick={() => { setIsAnimating(true); setCurrentIdx((i) => i + 1); }}
               disabled={!canNewer}
               className="w-5 h-5 flex items-center justify-center text-stone-300 hover:text-stone-500 disabled:opacity-30 text-sm leading-none"
             >
-              ›
+              窶ｺ
             </button>
           </div>
           <div className="flex-1 h-px bg-stone-100" />

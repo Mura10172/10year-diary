@@ -110,14 +110,14 @@ export default function RecentEntries({
         {entry.text ? (
           <button
             onClick={() => onSelect(entry.date)}
-            className="text-left bg-white rounded-2xl px-3 py-3 border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all duration-150 overflow-hidden"
+            className="text-left bg-white rounded-2xl px-3 py-3 border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all duration-150 min-h-[5rem] overflow-hidden"
           >
             <p className="text-[11px] text-stone-400 mb-1.5">{label}</p>
             <p className="text-xs text-stone-500 leading-relaxed line-clamp-4">{entry.text}</p>
             {photoGrid}
           </button>
         ) : (
-          <div className="h-[8.5rem] bg-white/40 rounded-2xl border border-stone-50" />
+          <div className="min-h-[5rem] bg-white/40 rounded-2xl border border-stone-50" />
         )}
         {/* 投稿２ */}
         {entry.text2 && (

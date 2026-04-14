@@ -128,7 +128,7 @@ export default function RecentEntries({
             className="text-left bg-white rounded-2xl px-3 py-3 border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all duration-150 overflow-hidden"
           >
             {!entry.text && <p className="text-[11px] text-stone-400 mb-1.5">{label}</p>}
-            <p className="text-xs text-stone-400 leading-relaxed line-clamp-4">{cleanText(entry.text2).split(String.fromCharCode(10)).flatMap((l, i) => i === 0 ? [l] : [<br key={i} />, l])}</p>
+            <p className="text-xs text-stone-400 leading-relaxed" style={{overflow:"hidden",display:"-webkit-box",WebkitBoxOrient:"vertical",WebkitLineClamp:4,whiteSpace:"pre-line"}}>{cleanText(entry.text2)}</p>
           </button>
         )}
       </div>

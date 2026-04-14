@@ -177,7 +177,7 @@ export default function EntryModal({
                   className="text-sm text-stone-700 leading-[1.9] whitespace-pre-wrap cursor-pointer"
                   onClick={() => setEditing(true)}
                 >
-                  {cleanText(entry.text).split(String.fromCharCode(10)).flatMap((l, i) => i === 0 ? [l] : [<br key={i} />, l])}
+                  {cleanText(entry.text)}
                 </p>
               </div>
               {entry.text2 && (
@@ -189,7 +189,7 @@ export default function EntryModal({
                       className="text-sm text-stone-600 leading-[1.9] whitespace-pre-wrap cursor-pointer"
                       onClick={() => setEditing(true)}
                     >
-                      {cleanText(entry.text2).split(String.fromCharCode(10)).flatMap((l, i) => i === 0 ? [l] : [<br key={i} />, l])}
+                      {cleanText(entry.text2)}
                     </p>
                   </div>
                 </>

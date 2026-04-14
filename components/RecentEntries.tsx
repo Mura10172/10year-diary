@@ -117,7 +117,7 @@ export default function RecentEntries({
             {photoGrid}
           </button>
         ) : (
-          <div className="h-[8.5rem]" />
+          <div className="h-[8.5rem] bg-white/40 rounded-2xl border border-stone-50" />
         )}
         {/* 投稿２ */}
         {entry.text2 && (

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { saveEntry, deleteEntry } from "@/lib/storage";
 import { syncSave, syncDelete } from "@/lib/syncToSheets";
 import { useSpeech } from "@/hooks/useSpeech";
@@ -20,6 +20,7 @@ export default function EntryModal({
   const [text1, setText1] = useState(initialEntry.text);
   const [text2, setText2] = useState(initialEntry.text2 ?? "");
   const { listening, interim, supported, start, stop } = useSpeech();
+  const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -28,6 +29,32 @@ export default function EntryModal({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose, stop]);
+
+  // 左右スワイプでモーダルを閉じる（ビューモード時のみ）
+  useEffect(() => {
+    if (editing) return;
+    const el = modalRef.current;
+    if (!el) return;
+    let startX = 0;
+    let startY = 0;
+    const onStart = (e: TouchEvent) => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    };
+    const onEnd = (e: TouchEvent) => {
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = e.changedTouches[0].clientY - startY;
+      if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        stop(); onClose();
+      }
+    };
+    el.addEventListener("touchstart", onStart, { passive: true });
+    el.addEventListener("touchend", onEnd, { passive: true });
+    return () => {
+      el.removeEventListener("touchstart", onStart);
+      el.removeEventListener("touchend", onEnd);
+    };
+  }, [editing, onClose, stop]);
 
   const handleVoice = () => {
     if (listening) stop();
@@ -92,7 +119,7 @@ export default function EntryModal({
       className="fixed inset-0 bg-black/25 backdrop-blur-sm z-50 flex items-center justify-center p-4"
       onClick={(e) => { if (e.target === e.currentTarget) { stop(); onClose(); } }}
     >
-      <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden">
+      <div ref={modalRef} className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-stone-50">
           <div>

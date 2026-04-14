@@ -92,12 +92,13 @@ export default function RecentEntries({
     return (
       <div key={colKey} style={{ minWidth: "50%", padding: "0 4px" }} className="flex flex-col gap-2">
         {/* 投稿１ */}
+        {entry.text && (
         <button
           onClick={() => onSelect(entry.date)}
           className="text-left bg-white rounded-2xl px-3 py-3 border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all duration-150"
         >
           <p className="text-[11px] text-stone-400 mb-1.5">{label}</p>
-          <p className="text-xs text-stone-500 leading-relaxed h-[7rem] overflow-hidden">
+          <p className="text-xs text-stone-500 leading-relaxed line-clamp-4">
             {entry.text}
           </p>
           {entry.photos && entry.photos.length > 0 && (
@@ -110,6 +111,7 @@ export default function RecentEntries({
             </div>
           )}
         </button>
+        )}
         {/* 投稿２ or blank */}
         {entry.text2 ? (
           <button
@@ -117,7 +119,7 @@ export default function RecentEntries({
             className="text-left bg-white rounded-2xl px-3 py-3 border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all duration-150"
           >
             <p className="text-[11px] text-stone-400 mb-1.5">{label}</p>
-            <p className="text-xs text-stone-400 leading-relaxed h-[7rem] overflow-hidden">
+            <p className="text-xs text-stone-400 leading-relaxed line-clamp-3">
               {entry.text2}
             </p>
             {entry.photos && entry.photos.length > 0 && (
@@ -130,11 +132,6 @@ export default function RecentEntries({
               </div>
             )}
           </button>
-        ) : (
-          <div className="bg-white/40 rounded-2xl border border-stone-50 px-3 py-3">
-            <div style={{ visibility: "hidden" }} className="text-[11px] mb-1.5">x</div>
-            <div className="h-[7rem]" />
-          </div>
         )}
       </div>
     );

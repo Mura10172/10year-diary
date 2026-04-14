@@ -67,8 +67,8 @@ export default function PastEntries({
     for (let p = maxYears - 1; p >= 0; p--) {
       const year = currentYear - 1 - p;
       const [left, right] = findTwoClosest(entries, year, m, d);
-      built.push({ year, entry: left });
-      built.push({ year, entry: right });
+      if (left) built.push({ year, entry: left });
+      if (right) built.push({ year, entry: right });
     }
     setCols(built);
     setCurrentIdx(Math.max(0, built.length - 2));
@@ -114,7 +114,7 @@ export default function PastEntries({
     return (
       <div key={colKey} style={{ minWidth: "50%", padding: "0 4px" }} className="flex flex-col gap-2">
         {/* 投稿１ */}
-        {entry ? (
+        {entry && (
           <button
             onClick={() => setSelected(entry)}
             className="text-left bg-white rounded-2xl px-3 py-3 border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all duration-150"
@@ -125,7 +125,7 @@ export default function PastEntries({
               </span>
               <span className="text-[11px] text-stone-300">{currentYear - year}年前</span>
             </div>
-            <p className="text-xs text-stone-400 leading-relaxed h-[7rem] overflow-hidden">
+            <p className="text-xs text-stone-400 leading-relaxed line-clamp-4">
               {entry.text}
             </p>
             {entry.photos && entry.photos.length > 0 && (
@@ -138,13 +138,6 @@ export default function PastEntries({
               </div>
             )}
           </button>
-        ) : (
-          <div className="flex flex-col px-3 py-3 bg-white/60 rounded-2xl border border-stone-50">
-            <span className="text-[11px] text-stone-300 mb-1.5">{year}年</span>
-            <div className="h-[7rem] flex items-center">
-              <span className="text-xs text-stone-200">—</span>
-            </div>
-          </div>
         )}
         {/* 投稿２ */}
         {entry?.text2 ? (
@@ -158,7 +151,7 @@ export default function PastEntries({
               </span>
               <span className="text-[11px] text-stone-300">{currentYear - year}年前</span>
             </div>
-            <p className="text-xs text-stone-300 leading-relaxed h-[7rem] overflow-hidden">
+            <p className="text-xs text-stone-300 leading-relaxed line-clamp-3">
               {entry.text2}
             </p>
             {entry.photos && entry.photos.length > 0 && (
@@ -171,11 +164,6 @@ export default function PastEntries({
               </div>
             )}
           </button>
-        ) : (
-          <div className="bg-white/40 rounded-2xl border border-stone-50 px-3 py-3">
-            <div style={{ visibility: "hidden" }} className="text-[11px] mb-1.5">x</div>
-            <div className="h-[7rem]" />
-          </div>
         )}
       </div>
     );

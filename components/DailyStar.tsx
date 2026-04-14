@@ -1,8 +1,10 @@
-﻿"use client";
+"use client";
 import { useState, useEffect } from "react";
 import { getAllEntries } from "@/lib/storage";
 import { Entry } from "@/types";
 import EntryModal from "@/components/EntryModal";
+import { loadThemeId, getTheme } from "@/lib/theme";
+import type { ColorTheme } from "@/lib/theme";
 
 function todayDateKey(): string {
   const d = new Date();
@@ -16,6 +18,7 @@ function cleanText(text: string): string {
 export default function DailyStar({ refreshKey }: { refreshKey: number }) {
   const [entry, setEntry] = useState<Entry | null>(null);
   const [selected, setSelected] = useState(false);
+  const [theme, setTheme] = useState<ColorTheme>(() => getTheme());
 
   useEffect(() => {
     const all = getAllEntries();
@@ -25,6 +28,12 @@ export default function DailyStar({ refreshKey }: { refreshKey: number }) {
     const hash = key.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
     setEntry(starred[hash % starred.length]);
   }, [refreshKey]);
+
+  useEffect(() => {
+    const onThemeChange = () => setTheme(getTheme());
+    window.addEventListener("themechange", onThemeChange);
+    return () => window.removeEventListener("themechange", onThemeChange);
+  }, []);
 
   if (!entry) return null;
 
@@ -37,11 +46,17 @@ export default function DailyStar({ refreshKey }: { refreshKey: number }) {
       <div>
         <button
           onClick={() => setSelected(true)}
-          className="w-full text-left bg-sky-50 rounded-2xl px-4 py-3 border border-sky-200 hover:border-sky-300 hover:shadow-sm transition-all duration-150"
+          className="w-full text-left rounded-2xl px-4 py-3 border hover:shadow-sm transition-all duration-150"
+          style={{
+            backgroundColor: theme.bg,
+            borderColor: theme.border,
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.borderColor = theme.hoverBorder)}
+          onMouseLeave={(e) => (e.currentTarget.style.borderColor = theme.border)}
         >
           <div className="flex items-center justify-between mb-1.5">
             <p className="text-[11px] text-stone-400">{y}年{m}月{d}日</p>
-            <span className="text-xs text-sky-400">★</span>
+            <span className="text-xs" style={{ color: theme.accent }}>★</span>
           </div>
           {showText1 && (
             <p className="text-sm text-stone-600 leading-relaxed line-clamp-4 whitespace-pre-line">

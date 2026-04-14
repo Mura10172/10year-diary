@@ -21,6 +21,7 @@ export default function EntryModal({
   const [viewingPhoto, setViewingPhoto] = useState<string | null>(null);
   const [text1, setText1] = useState(initialEntry.text);
   const [text2, setText2] = useState(initialEntry.text2 ?? "");
+  const [focusField, setFocusField] = useState<"text1" | "text2">("text1");
   const { listening, interim, supported, start, stop } = useSpeech();
   const modalRef = useRef<HTMLDivElement>(null);
   const textarea1Ref = useRef<HTMLTextAreaElement>(null);
@@ -36,6 +37,11 @@ export default function EntryModal({
     if (editing) {
       autoResize(textarea1Ref.current);
       autoResize(textarea2Ref.current);
+      if (focusField === "text2") {
+        textarea2Ref.current?.focus();
+      } else {
+        textarea1Ref.current?.focus();
+      }
     }
   }, [editing]);
 
@@ -172,7 +178,6 @@ export default function EntryModal({
                   ref={textarea1Ref}
                   style={{ overflow: "hidden" }}
                   className="w-full min-h-[8rem] text-sm text-stone-700 leading-[1.9] resize-none outline-none"
-                  autoFocus
                 />
                 {listening && interim && (
                   <p className="text-xs text-stone-300 italic mt-1">{interim}</p>
@@ -197,7 +202,7 @@ export default function EntryModal({
                 <p className="text-[11px] text-stone-300 tracking-widest mb-2">投稿１</p>
                 <p
                   className="text-sm text-stone-700 leading-[1.9] whitespace-pre-wrap cursor-pointer"
-                  onClick={() => setEditing(true)}
+                  onClick={() => { setFocusField("text1"); setEditing(true); }}
                 >
                   {cleanText(entry.text)}
                 </p>
@@ -209,7 +214,7 @@ export default function EntryModal({
                     <p className="text-[11px] text-stone-300 tracking-widest mb-2">投稿２</p>
                     <p
                       className="text-sm text-stone-600 leading-[1.9] whitespace-pre-wrap cursor-pointer"
-                      onClick={() => setEditing(true)}
+                      onClick={() => { setFocusField("text2"); setEditing(true); }}
                     >
                       {cleanText(entry.text2)}
                     </p>

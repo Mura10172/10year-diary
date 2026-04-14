@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -22,4 +22,143 @@ body {
     from { opacity: 0; transform: translateY(6px); }
     to   { opacity: 1; transform: translateY(0); }
   }
+}
+
+/* ============================================
+   Global Color Themes
+   ============================================ */
+
+/* Light (default) */
+:root {
+  --gbg:      #faf8f4;
+  --gcard:    #ffffff;
+  --gborder:  #f5f5f4;
+  --gborder2: #fafaf9;
+  --gt1:      #44403c;
+  --gt2:      #78716c;
+  --gt3:      #a8a29e;
+  --gt4:      #d6d3d1;
+  --gt5:      #e7e5e4;
+  --gbtn:     #f5f5f4;
+  --gbtnhov:  #e7e5e4;
+  --gplaceholder: #e7e5e4;
+}
+
+/* Dark */
+[data-theme="dark"] {
+  --gbg:      #1c1917;
+  --gcard:    #292524;
+  --gborder:  #44403c;
+  --gborder2: #292524;
+  --gt1:      #e7e5e4;
+  --gt2:      #d6d3d1;
+  --gt3:      #a8a29e;
+  --gt4:      #78716c;
+  --gt5:      #57534e;
+  --gbtn:     #3c3634;
+  --gbtnhov:  #44403c;
+  --gplaceholder: #57534e;
+}
+
+/* Cream */
+[data-theme="cream"] {
+  --gbg:      #fdf6e3;
+  --gcard:    #fefcf6;
+  --gborder:  #eddfc0;
+  --gborder2: #fdf6e3;
+  --gt1:      #5c3d1e;
+  --gt2:      #8b6340;
+  --gt3:      #b8956a;
+  --gt4:      #d4b896;
+  --gt5:      #e8d5c0;
+  --gbtn:     #f0e6cc;
+  --gbtnhov:  #eddfc0;
+  --gplaceholder: #e8d5c0;
+}
+
+/* Gray */
+[data-theme="gray"] {
+  --gbg:      #f1f5f9;
+  --gcard:    #ffffff;
+  --gborder:  #e2e8f0;
+  --gborder2: #f1f5f9;
+  --gt1:      #334155;
+  --gt2:      #64748b;
+  --gt3:      #94a3b8;
+  --gt4:      #cbd5e1;
+  --gt5:      #e2e8f0;
+  --gbtn:     #e2e8f0;
+  --gbtnhov:  #cbd5e1;
+  --gplaceholder: #e2e8f0;
+}
+
+/* Midnight */
+[data-theme="midnight"] {
+  --gbg:      #0f172a;
+  --gcard:    #1e293b;
+  --gborder:  #334155;
+  --gborder2: #1e293b;
+  --gt1:      #e2e8f0;
+  --gt2:      #cbd5e1;
+  --gt3:      #94a3b8;
+  --gt4:      #64748b;
+  --gt5:      #475569;
+  --gbtn:     #334155;
+  --gbtnhov:  #3d4f63;
+  --gplaceholder: #475569;
+}
+
+/* --- Apply CSS variables to Tailwind classes --- */
+body {
+  background-color: var(--gbg) !important;
+  color: var(--gt1);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.bg-white               { background-color: var(--gcard)    !important; }
+.bg-stone-50            { background-color: var(--gbg)       !important; }
+.bg-stone-100           { background-color: var(--gbtn)      !important; }
+
+.text-stone-700         { color: var(--gt1) !important; }
+.text-stone-600         { color: var(--gt2) !important; }
+.text-stone-500         { color: var(--gt2) !important; }
+.text-stone-400         { color: var(--gt3) !important; }
+.text-stone-300         { color: var(--gt4) !important; }
+.text-stone-200         { color: var(--gt5) !important; }
+
+.border-stone-100       { border-color: var(--gborder)  !important; }
+.border-stone-50        { border-color: var(--gborder2) !important; }
+.border-stone-200       { border-color: var(--gborder)  !important; }
+
+.bg-stone-100.h-px      { background-color: var(--gborder) !important; }
+
+/* Placeholder text */
+::placeholder           { color: var(--gplaceholder) !important; }
+
+/* Hover overrides */
+.hover\:bg-stone-50:hover  { background-color: var(--gbtn)    !important; }
+.hover\:bg-stone-100:hover { background-color: var(--gbtnhov) !important; }
+.hover\:bg-stone-200:hover { background-color: var(--gborder) !important; }
+
+/* Shadow adjustments for dark themes */
+[data-theme="dark"] .shadow-sm,
+[data-theme="midnight"] .shadow-sm {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4) !important;
+}
+[data-theme="dark"] .shadow-2xl,
+[data-theme="midnight"] .shadow-2xl {
+  box-shadow: 0 20px 40px rgba(0,0,0,0.6) !important;
+}
+
+/* BottomNav background */
+[data-theme="dark"] nav,
+[data-theme="midnight"] nav {
+  background-color: var(--gcard) !important;
+  border-color: var(--gborder) !important;
+}
+
+/* Textarea */
+textarea {
+  background-color: transparent;
+  color: var(--gt1);
 }

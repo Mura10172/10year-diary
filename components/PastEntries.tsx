@@ -110,7 +110,7 @@ export default function PastEntries({
     if (!col) return <div key={colKey} style={{ minWidth: "50%", padding: "0 4px" }} />;
     const { year, entry } = col;
     const label = entry
-      ? (() => { const [, em, ed] = entry.date.split("-").map(Number); return `${em}譛・{ed}譌･`; })()
+      ? (() => { const [, em, ed] = entry.date.split("-").map(Number); return `${em}月${ed}日`; })()
       : "";
     const photoGrid = entry?.photos && entry.photos.length > 0 ? (
       <div className="grid grid-cols-3 gap-1 mt-1 shrink-0">
@@ -156,7 +156,7 @@ export default function PastEntries({
             {!entry.text && (
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-[11px] font-medium text-stone-500">{year}蟷ｴ{label}</span>
-                <span className="text-[11px] text-stone-300">{currentYear - year}蟷ｴ蜑・/span>
+                <span className="text-[11px] text-stone-300">{currentYear - year}年前</span>
               </div>
             )}
             <p className="text-xs text-stone-300 leading-relaxed line-clamp-4 whitespace-pre-line">{cleanText(entry.text2)}</p>

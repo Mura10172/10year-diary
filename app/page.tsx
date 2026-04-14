@@ -2,6 +2,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import DateNav from "@/components/DateNav";
 import TodayEntry from "@/components/TodayEntry";
+import DailyStar from "@/components/DailyStar";
 import PastEntries from "@/components/PastEntries";
 import MonthCalendars from "@/components/MonthCalendars";
 import RecentEntries from "@/components/RecentEntries";
@@ -132,6 +133,8 @@ export default function Home() {
                   データを読み込み中...
                 </p>
               )}
+
+              <DailyStar refreshKey={refreshKey} />
 
               <DateNav
                 date={date}

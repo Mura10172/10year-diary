@@ -38,10 +38,12 @@ export default function EntryModal({
     let startX = 0;
     let startY = 0;
     const onStart = (e: TouchEvent) => {
+      e.stopPropagation();
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
     };
     const onEnd = (e: TouchEvent) => {
+      e.stopPropagation();
       const dx = e.changedTouches[0].clientX - startX;
       const dy = e.changedTouches[0].clientY - startY;
       if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {

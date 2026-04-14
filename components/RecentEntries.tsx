@@ -34,7 +34,7 @@ export default function RecentEntries({
   useEffect(() => {
     const today = todayStr();
     const list = getAllEntries()
-      .filter((e) => e.date <= today)
+      .filter((e) => e.date <= today && (e.text || e.text2))
       .sort((a, b) => b.date.localeCompare(a.date));
     setEntries(list);
   }, [refreshKey]);

@@ -135,6 +135,7 @@ export default function RecentEntries({
 
 
   return (
+    <>
     <section>
       <div className="flex items-center gap-3 mb-2">
         <div className="flex-1 h-px bg-stone-100" />
@@ -190,5 +191,6 @@ export default function RecentEntries({
           onOpenEntry={() => { setPhotoState(null); onSelect(photoState.entry.date); }}
         />
       )}
+    </>
   );
 }

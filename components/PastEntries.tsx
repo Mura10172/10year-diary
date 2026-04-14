@@ -130,9 +130,9 @@ export default function PastEntries({
         {entry ? (
           <button
             onClick={() => setSelected(entry)}
-            className="text-left bg-white rounded-2xl px-3 py-3 border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all duration-150"
+            className="text-left bg-white rounded-2xl px-3 py-3 border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all duration-150 overflow-hidden"
           >
-            <div className="flex items-center justify-between mb-1.5 shrink-0">
+            <div className="flex items-center justify-between mb-1.5">
               <span className="text-[11px] font-medium text-stone-500">{year}年{label}</span>
               <span className="text-[11px] text-stone-300">{currentYear - year}年前</span>
             </div>
@@ -146,12 +146,14 @@ export default function PastEntries({
         {entry?.text2 ? (
           <button
             onClick={() => setSelected(entry)}
-            className="text-left bg-white rounded-2xl px-3 py-3 border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all duration-150"
+            className="text-left bg-white rounded-2xl px-3 py-3 border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all duration-150 overflow-hidden"
           >
-            <div className="flex items-center justify-between mb-1.5 shrink-0">
-              <span className="text-[11px] font-medium text-stone-500">{year}年{label}</span>
-              <span className="text-[11px] text-stone-300">{currentYear - year}年前</span>
-            </div>
+            {!entry.text && (
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[11px] font-medium text-stone-500">{year}年{label}</span>
+                <span className="text-[11px] text-stone-300">{currentYear - year}年前</span>
+              </div>
+            )}
             <p className="text-xs text-stone-300 leading-relaxed line-clamp-4">{entry.text2}</p>
           </button>
         )}

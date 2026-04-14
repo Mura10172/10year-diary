@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect, useRef } from "react";
 import { getEntry, saveEntry, deleteEntry } from "@/lib/storage";
 import { syncSave, syncDelete } from "@/lib/syncToSheets";
@@ -338,7 +338,7 @@ export default function TodayEntry({
   };
 
   // No entry and not editing → compact "+" box
-  if (!entry && !editing1) {
+  if (!entry && !editing1 && !editing2) {
     return (
       <div
         ref={containerRef}

@@ -1,4 +1,6 @@
-"use client";
+﻿"use client";
+
+function cleanText(text: string): string { return text.replace(/\n{2,}/g, "\n").trim(); }
 import { useState, useEffect, useRef } from "react";
 import { saveEntry, deleteEntry } from "@/lib/storage";
 import { syncSave, syncDelete } from "@/lib/syncToSheets";
@@ -175,7 +177,7 @@ export default function EntryModal({
                   className="text-sm text-stone-700 leading-[1.9] whitespace-pre-wrap cursor-pointer"
                   onClick={() => setEditing(true)}
                 >
-                  {entry.text}
+                  {cleanText(entry.text)}
                 </p>
               </div>
               {entry.text2 && (
@@ -187,7 +189,7 @@ export default function EntryModal({
                       className="text-sm text-stone-600 leading-[1.9] whitespace-pre-wrap cursor-pointer"
                       onClick={() => setEditing(true)}
                     >
-                      {entry.text2}
+                      {cleanText(entry.text2)}
                     </p>
                   </div>
                 </>

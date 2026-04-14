@@ -1,4 +1,6 @@
-"use client";
+﻿"use client";
+
+function cleanText(text: string): string { return text.replace(/\n{2,}/g, "\n").trim(); }
 import { useState, useEffect } from "react";
 import { getAllEntries } from "@/lib/storage";
 import { Entry } from "@/types";
@@ -102,8 +104,8 @@ export default function ListView({
                           {type === "star" && entry.starred1 && (
                             <span className="absolute -left-1 top-0 text-[11px] text-amber-400">★</span>
                           )}
-                          <p className={`text-sm text-stone-600 leading-relaxed line-clamp-4 ${type === "star" && entry.starred1 ? "pl-3" : ""}`}>
-                            {entry.text}
+                          <p className={`text-sm text-stone-600 leading-relaxed line-clamp-4 whitespace-pre-line ${type === "star" && entry.starred1 ? "pl-3" : ""}`}>
+                            {cleanText(entry.text)}
                           </p>
                         </div>
                       )}
@@ -119,8 +121,8 @@ export default function ListView({
                           {type === "star" && entry.starred2 && (
                             <span className="absolute -left-1 top-0 text-[11px] text-amber-400">★</span>
                           )}
-                          <p className={`text-sm text-stone-500 leading-relaxed line-clamp-4 ${type === "star" && entry.starred2 ? "pl-3" : ""}`}>
-                            {entry.text2}
+                          <p className={`text-sm text-stone-500 leading-relaxed line-clamp-4 whitespace-pre-line ${type === "star" && entry.starred2 ? "pl-3" : ""}`}>
+                            {cleanText(entry.text2)}
                           </p>
                         </div>
                       )}

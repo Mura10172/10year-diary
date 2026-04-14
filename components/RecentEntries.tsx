@@ -89,53 +89,43 @@ export default function RecentEntries({
     if (!entry) return <div key={colKey} style={{ minWidth: "50%", padding: "0 4px" }} />;
     const [y, m, d] = entry.date.split("-").map(Number);
     const label = `${y}年${m}月${d}日`;
+    const photoGrid = entry.photos && entry.photos.length > 0 ? (
+      <div className="grid grid-cols-3 gap-1 mt-1 shrink-0">
+        {entry.photos.slice(0, 3).map((url: string, i: number) => (
+          <div key={i} className="h-7 rounded overflow-hidden">
+            <img src={url} alt="" className="w-full h-full object-cover" />
+          </div>
+        ))}
+      </div>
+    ) : null;
     return (
       <div key={colKey} style={{ minWidth: "50%", padding: "0 4px" }} className="flex flex-col gap-2">
         {/* 投稿１ */}
         {entry.text && (
-        <button
-          onClick={() => onSelect(entry.date)}
-          className="text-left bg-white rounded-2xl px-3 py-3 border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all duration-150"
-        >
-          <p className="text-[11px] text-stone-400 mb-1.5">{label}</p>
-          <p className="text-xs text-stone-500 leading-relaxed line-clamp-4">
-            {entry.text}
-          </p>
-          {entry.photos && entry.photos.length > 0 && (
-            <div className="grid grid-cols-3 gap-1 mt-1.5">
-              {entry.photos.slice(0, 3).map((url, i) => (
-                <div key={i} className="aspect-square rounded overflow-hidden">
-                  <img src={url} alt="" className="w-full h-full object-cover" />
-                </div>
-              ))}
-            </div>
-          )}
-        </button>
-        )}
-        {/* 投稿２ or blank */}
-        {entry.text2 ? (
           <button
             onClick={() => onSelect(entry.date)}
-            className="text-left bg-white rounded-2xl px-3 py-3 border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all duration-150"
+            className="text-left bg-white rounded-2xl px-3 py-3 border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all duration-150 h-[8.5rem] flex flex-col overflow-hidden"
           >
-            <p className="text-[11px] text-stone-400 mb-1.5">{label}</p>
-            <p className="text-xs text-stone-400 leading-relaxed line-clamp-3">
-              {entry.text2}
-            </p>
-            {entry.photos && entry.photos.length > 0 && (
-              <div className="grid grid-cols-3 gap-1 mt-1.5">
-                {entry.photos.slice(0, 3).map((url, i) => (
-                  <div key={i} className="aspect-square rounded overflow-hidden">
-                    <img src={url} alt="" className="w-full h-full object-cover" />
-                  </div>
-                ))}
-              </div>
-            )}
+            <p className="text-[11px] text-stone-400 mb-1.5 shrink-0">{label}</p>
+            <p className="text-xs text-stone-500 leading-relaxed flex-1 overflow-hidden">{entry.text}</p>
+            {photoGrid}
+          </button>
+        )}
+        {/* 投稿２ */}
+        {entry.text2 && (
+          <button
+            onClick={() => onSelect(entry.date)}
+            className="text-left bg-white rounded-2xl px-3 py-3 border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all duration-150 h-[7.5rem] flex flex-col overflow-hidden"
+          >
+            <p className="text-[11px] text-stone-400 mb-1.5 shrink-0">{label}</p>
+            <p className="text-xs text-stone-400 leading-relaxed flex-1 overflow-hidden">{entry.text2}</p>
+            {photoGrid}
           </button>
         )}
       </div>
     );
   }
+
 
   return (
     <section>

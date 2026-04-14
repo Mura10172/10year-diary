@@ -35,26 +35,21 @@ export default function DailyStar({ refreshKey }: { refreshKey: number }) {
   return (
     <>
       <div>
-        <div className="flex items-center gap-3 mb-2">
-          <div className="flex-1 h-px bg-stone-100" />
-          <p className="text-xs text-stone-300 tracking-widest">今日の★</p>
-          <div className="flex-1 h-px bg-stone-100" />
-        </div>
         <button
           onClick={() => setSelected(true)}
-          className="w-full text-left bg-white rounded-2xl px-4 py-3 border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all duration-150"
+          className="w-full text-left bg-sky-50 rounded-2xl px-4 py-3 border border-sky-200 hover:border-sky-300 hover:shadow-sm transition-all duration-150"
         >
           <div className="flex items-center justify-between mb-1.5">
             <p className="text-[11px] text-stone-400">{y}年{m}月{d}日</p>
-            <span className="text-xs text-amber-400">★</span>
+            <span className="text-xs text-sky-400">★</span>
           </div>
           {showText1 && (
-            <p className="text-xs text-stone-600 leading-relaxed line-clamp-4 whitespace-pre-line">
+            <p className="text-sm text-stone-600 leading-relaxed line-clamp-4 whitespace-pre-line">
               {cleanText(entry.text!)}
             </p>
           )}
           {showText2 && (
-            <p className={`text-xs text-stone-500 leading-relaxed line-clamp-4 whitespace-pre-line ${showText1 ? "mt-2" : ""}`}>
+            <p className={`text-sm text-stone-500 leading-relaxed line-clamp-4 whitespace-pre-line ${showText1 ? "mt-2" : ""}`}>
               {cleanText(entry.text2!)}
             </p>
           )}

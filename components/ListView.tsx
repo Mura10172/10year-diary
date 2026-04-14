@@ -1,17 +1,16 @@
 ﻿"use client";
-
 import { useState, useEffect } from "react";
 import { getAllEntries } from "@/lib/storage";
 import { Entry } from "@/types";
 import EntryModal from "@/components/EntryModal";
 import type { View } from "@/components/BottomNav";
 
+function cleanText(text: string): string { return text.replace(/\n{2,}/g, "\n").trim(); }
+
 function formatYM(ym: string): string {
   const [y, m] = ym.split("-").map(Number);
   return `${y}年${m}月`;
 }
-
-function cleanText(text: string): string { return text.replace(/\n{2,}/g, "\n").trim(); }
 
 export default function ListView({
   type,
@@ -105,7 +104,7 @@ export default function ListView({
                           {type === "star" && entry.starred1 && (
                             <span className="absolute -left-1 top-0 text-[11px] text-amber-400">★</span>
                           )}
-                          <p className={`text-sm text-stone-600 leading-relaxed ${type === "star" && entry.starred1 ? "pl-3" : ""}`} style={{overflow:"hidden",display:"-webkit-box",WebkitBoxOrient:"vertical",WebkitLineClamp:4,whiteSpace:"pre-line"}}>
+                          <p className={`text-sm text-stone-600 leading-relaxed line-clamp-4 whitespace-pre-line ${type === "star" && entry.starred1 ? "pl-3" : ""}`}>
                             {cleanText(entry.text)}
                           </p>
                         </div>
@@ -122,7 +121,7 @@ export default function ListView({
                           {type === "star" && entry.starred2 && (
                             <span className="absolute -left-1 top-0 text-[11px] text-amber-400">★</span>
                           )}
-                          <p className={`text-sm text-stone-500 leading-relaxed ${type === "star" && entry.starred2 ? "pl-3" : ""}`} style={{overflow:"hidden",display:"-webkit-box",WebkitBoxOrient:"vertical",WebkitLineClamp:4,whiteSpace:"pre-line"}}>
+                          <p className={`text-sm text-stone-500 leading-relaxed line-clamp-4 whitespace-pre-line ${type === "star" && entry.starred2 ? "pl-3" : ""}`}>
                             {cleanText(entry.text2)}
                           </p>
                         </div>

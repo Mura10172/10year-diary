@@ -1,15 +1,14 @@
 ﻿"use client";
-
 import { useState, useEffect } from "react";
 import { getAllEntries } from "@/lib/storage";
 import { Entry } from "@/types";
 import PhotoViewer from "@/components/PhotoViewer";
 
+function cleanText(text: string): string { return text.replace(/\n{2,}/g, "\n").trim(); }
+
 function todayStr(): string {
   const d = new Date();
   return [
-
-function cleanText(text: string): string { return text.replace(/\n{2,}/g, "\n").trim(); }
     d.getFullYear(),
     String(d.getMonth() + 1).padStart(2, "0"),
     String(d.getDate()).padStart(2, "0"),
@@ -129,7 +128,7 @@ export default function RecentEntries({
             className="text-left bg-white rounded-2xl px-3 py-3 border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all duration-150 overflow-hidden"
           >
             {!entry.text && <p className="text-[11px] text-stone-400 mb-1.5">{label}</p>}
-            <p className="text-xs text-stone-400 leading-relaxed" style={{overflow:"hidden",display:"-webkit-box",WebkitBoxOrient:"vertical",WebkitLineClamp:4,whiteSpace:"pre-line"}}>{cleanText(entry.text2)}</p>
+            <p className="text-xs text-stone-400 leading-relaxed line-clamp-4 whitespace-pre-line">{cleanText(entry.text2)}</p>
           </button>
         )}
       </div>

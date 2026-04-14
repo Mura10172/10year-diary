@@ -1,17 +1,16 @@
 ﻿"use client";
-
 import { useState, useEffect } from "react";
 import { getAllEntries } from "@/lib/storage";
 import { Entry } from "@/types";
 import EntryModal from "@/components/EntryModal";
 import PhotoViewer from "@/components/PhotoViewer";
 
+function cleanText(text: string): string { return text.replace(/\n{2,}/g, "\n").trim(); }
+
 function todayStr(): string {
   const d = new Date();
   return [
     d.getFullYear(),
-
-function cleanText(text: string): string { return text.replace(/\n{2,}/g, "\n").trim(); }
     String(d.getMonth() + 1).padStart(2, "0"),
     String(d.getDate()).padStart(2, "0"),
   ].join("-");
@@ -160,7 +159,7 @@ export default function PastEntries({
                 <span className="text-[11px] text-stone-300">{currentYear - year}蟷ｴ蜑・/span>
               </div>
             )}
-            <p className="text-xs text-stone-300 leading-relaxed" style={{overflow:"hidden",display:"-webkit-box",WebkitBoxOrient:"vertical",WebkitLineClamp:4,whiteSpace:"pre-line"}}>{cleanText(entry.text2)}</p>
+            <p className="text-xs text-stone-300 leading-relaxed line-clamp-4 whitespace-pre-line">{cleanText(entry.text2)}</p>
           </button>
         )}
       </div>

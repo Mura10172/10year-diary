@@ -102,7 +102,7 @@ export default function ListView({
                           {type === "star" && entry.starred1 && (
                             <span className="absolute -left-1 top-0 text-[11px] text-amber-400">★</span>
                           )}
-                          <p className={`text-sm text-stone-600 leading-relaxed whitespace-pre-wrap ${type === "star" && entry.starred1 ? "pl-3" : ""}`}>
+                          <p className={`text-sm text-stone-600 leading-relaxed line-clamp-4 ${type === "star" && entry.starred1 ? "pl-3" : ""}`}>
                             {entry.text}
                           </p>
                         </div>
@@ -119,7 +119,7 @@ export default function ListView({
                           {type === "star" && entry.starred2 && (
                             <span className="absolute -left-1 top-0 text-[11px] text-amber-400">★</span>
                           )}
-                          <p className={`text-sm text-stone-500 leading-relaxed whitespace-pre-wrap ${type === "star" && entry.starred2 ? "pl-3" : ""}`}>
+                          <p className={`text-sm text-stone-500 leading-relaxed line-clamp-4 ${type === "star" && entry.starred2 ? "pl-3" : ""}`}>
                             {entry.text2}
                           </p>
                         </div>

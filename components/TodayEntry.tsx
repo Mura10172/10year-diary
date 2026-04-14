@@ -276,8 +276,9 @@ export default function TodayEntry({
       const updated: Entry = {
         id: entry?.id ?? crypto.randomUUID(),
         date,
-        text: entry?.text ?? "",
-        text2: entry?.text2,
+        // 編集中のテキストをそのまま使う（entry?.text は保存前の古い値のため）
+        text: text1,
+        text2: text2 || undefined,
         starred1: entry?.starred1,
         starred2: entry?.starred2,
         photos: newPhotos,
@@ -287,7 +288,8 @@ export default function TodayEntry({
       saveEntry(updated);
       syncSave(updated);
       setEntry(updated);
-      onSaved?.();
+      // 編集中は onSaved() を呼ばない（refreshKey → useEffect → setEditing1(false) で状態リセットされるため）
+      if (!editing1 && !editing2) onSaved?.();
     } catch {
       alert("写真のアップロードに失敗しました");
     } finally {

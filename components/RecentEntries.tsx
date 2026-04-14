@@ -119,7 +119,6 @@ export default function RecentEntries({
           >
             <p className="text-[11px] text-stone-400 mb-1.5 shrink-0">{label}</p>
             <p className="text-xs text-stone-400 leading-relaxed flex-1 overflow-hidden">{entry.text2}</p>
-            {photoGrid}
           </button>
         )}
       </div>

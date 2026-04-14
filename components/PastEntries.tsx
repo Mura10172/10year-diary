@@ -145,7 +145,6 @@ export default function PastEntries({
               <span className="text-[11px] text-stone-300">{currentYear - year}年前</span>
             </div>
             <p className="text-xs text-stone-300 leading-relaxed flex-1 overflow-hidden">{entry.text2}</p>
-            {photoGrid}
           </button>
         )}
       </div>

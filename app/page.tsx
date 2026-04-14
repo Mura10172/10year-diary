@@ -115,6 +115,13 @@ export default function Home() {
     }
   }, []);
 
+  // ホームに戻ったとき最上部（★カード）にスクロール
+  useEffect(() => {
+    if (view === 'home') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [view]);
+
   const handleMenuSelect = useCallback((ym: string) => {
     // Scroll to the month section in ListView after menu closes
     setTimeout(() => {

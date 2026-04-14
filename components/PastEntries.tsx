@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState, useEffect } from "react";
 import { getAllEntries } from "@/lib/storage";
 import { Entry } from "@/types";
@@ -57,7 +57,8 @@ export default function PastEntries({
 
   const currentYear = parseInt(date.split("-")[0]);
   const [, m, d] = date.split("-").map(Number);
-  const maxYears = currentYear - 1972; // 1972蟷ｴ縺ｾ縺ｧ驕｡繧・
+  const maxYears = currentYear - 1972; // 1972年まで遡る
+
   useEffect(() => {
     setCurrentIdx(0);
     setSelected(null);
@@ -96,8 +97,8 @@ export default function PastEntries({
   const handleTouchEnd = () => {
     if (touchStartX === null) return;
     setIsAnimating(true);
-    if (dragDelta > 50 && canOlder) setCurrentIdx((i) => i - 1);    // right = older
-    else if (dragDelta < -50 && canNewer) setCurrentIdx((i) => i + 1); // left = newer
+    if (dragDelta > 50 && canOlder) setCurrentIdx((i) => i - 1);
+    else if (dragDelta < -50 && canNewer) setCurrentIdx((i) => i + 1);
     setDragDelta(0);
     setTouchStartX(null);
   };
@@ -127,7 +128,6 @@ export default function PastEntries({
     ) : null;
     return (
       <div key={colKey} style={{ minWidth: "50%", padding: "0 4px" }} className="flex flex-col gap-2">
-        {/* 謚慕ｨｿ・・(invisible spacer when no entry to keep 謚慕ｨｿ・・at bottom) */}
         {entry ? (
           <button
             onClick={() => setSelected(entry)}
@@ -147,7 +147,6 @@ export default function PastEntries({
         ) : (
           <div className="h-[8.5rem] bg-white/60 rounded-2xl border border-stone-50" />
         )}
-        {/* 謚慕ｨｿ・・*/}
         {entry?.text2 && (
           <button
             onClick={() => setSelected(entry)}
@@ -155,7 +154,7 @@ export default function PastEntries({
           >
             {!entry.text && (
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[11px] font-medium text-stone-500">{year}蟷ｴ{label}</span>
+                <span className="text-[11px] font-medium text-stone-500">{year}年{label}</span>
                 <span className="text-[11px] text-stone-300">{currentYear - year}年前</span>
               </div>
             )}
@@ -176,9 +175,11 @@ export default function PastEntries({
             <button
               onClick={() => { setIsAnimating(true); setCurrentIdx((i) => i - 1); }}
               disabled={!canOlder}
-              className="w-5 h-5 flex items-center justify-center text-stone-300 hover:text-stone-500 disabled:opacity-30 text-sm leading-none"
+              className="w-5 h-5 flex items-center justify-center text-stone-300 hover:text-stone-500 disabled:opacity-30"
             >
-              窶ｹ
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M7.5 2L3.5 6L7.5 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </button>
             <p className="text-xs text-stone-300 tracking-widest whitespace-nowrap">
               過去のこの日に近い投稿
@@ -186,9 +187,11 @@ export default function PastEntries({
             <button
               onClick={() => { setIsAnimating(true); setCurrentIdx((i) => i + 1); }}
               disabled={!canNewer}
-              className="w-5 h-5 flex items-center justify-center text-stone-300 hover:text-stone-500 disabled:opacity-30 text-sm leading-none"
+              className="w-5 h-5 flex items-center justify-center text-stone-300 hover:text-stone-500 disabled:opacity-30"
             >
-              窶ｺ
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M4.5 2L8.5 6L4.5 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </button>
           </div>
           <div className="flex-1 h-px bg-stone-100" />

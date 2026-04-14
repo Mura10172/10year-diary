@@ -143,7 +143,7 @@ export default function PastEntries({
           <div className="h-[8.5rem] bg-white/60 rounded-2xl border border-stone-50" />
         )}
         {/* 投稿２ */}
-        {entry?.text2 && (
+        {entry?.text2 ? (
           <button
             onClick={() => setSelected(entry)}
             className="text-left bg-white rounded-2xl px-3 py-3 border border-stone-100 hover:border-stone-200 hover:shadow-sm transition-all duration-150 h-[7.5rem] flex flex-col overflow-hidden"
@@ -154,6 +154,8 @@ export default function PastEntries({
             </div>
             <p className="text-xs text-stone-300 leading-relaxed flex-1 overflow-hidden">{entry.text2}</p>
           </button>
+        ) : (
+          <div className="h-[7.5rem] bg-white/60 rounded-2xl border border-stone-50" />
         )}
       </div>
     );

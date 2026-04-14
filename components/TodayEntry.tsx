@@ -183,16 +183,43 @@ export default function TodayEntry({
   };
 
   const handleDelete1 = () => {
-    if (!confirm("この日記を削除しますか？（気づきも削除されます）")) return;
-    deleteEntry(date);
-    syncDelete(date);
-    setEntry(null);
-    setText1("");
-    setText2("");
-    setEditing1(false);
-    setEditing2(false);
+    const hasOther = !!(entry?.text2 || (photos && photos.length > 0));
+    const msg = hasOther
+      ? "投稿１を削除しますか？（投稿２と写真は残ります）"
+      : "この日記を削除しますか？";
+    if (!confirm(msg)) return;
     speech1.stop();
-    onSaved?.();
+    if (hasOther) {
+      // 投稿２や写真が残る場合はテキストのみクリア
+      const now = Date.now();
+      const updated: Entry = {
+        id: entry!.id,
+        date,
+        text: "",
+        text2: entry?.text2,
+        starred1: undefined,
+        starred2: entry?.starred2,
+        photos: photos.length > 0 ? photos : undefined,
+        createdAt: entry!.createdAt,
+        updatedAt: now,
+      };
+      saveEntry(updated);
+      syncSave(updated);
+      setEntry(updated);
+      setText1("");
+      setEditing1(false);
+      onSaved?.();
+    } else {
+      // 他に何もなければエントリー全体を削除
+      deleteEntry(date);
+      syncDelete(date);
+      setEntry(null);
+      setText1("");
+      setText2("");
+      setEditing1(false);
+      setEditing2(false);
+      onSaved?.();
+    }
   };
 
   const handleStar1 = () => {

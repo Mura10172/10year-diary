@@ -181,7 +181,7 @@ export default function PastEntries({
               窶ｹ
             </button>
             <p className="text-xs text-stone-300 tracking-widest whitespace-nowrap">
-              驕主悉縺ｮ縺薙・譌･縺ｫ霑代＞謚慕ｨｿ
+              過去のこの日に近い投稿
             </p>
             <button
               onClick={() => { setIsAnimating(true); setCurrentIdx((i) => i + 1); }}

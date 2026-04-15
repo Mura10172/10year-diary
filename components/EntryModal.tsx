@@ -49,7 +49,7 @@ export default function EntryModal({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") { stop(); onClose(); }
+      if (e.key === "Escape") { handleClose(); }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -120,6 +120,15 @@ export default function EntryModal({
     setEntry(updated);
   };
 
+  const handleClose = () => {
+    if (editing && (text1 !== entry.text || text2 !== (entry.text2 ?? ""))) {
+      if (!confirm("保存されていない変更があります。
+閉じてもよいですか？")) return;
+    }
+    stop();
+    onClose();
+  };
+
   const handleCancelEdit = () => {
     setText1(entry.text);
     setText2(entry.text2 ?? "");
@@ -144,7 +153,7 @@ export default function EntryModal({
   return (
     <div
       className="fixed inset-0 bg-black/25 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-      onClick={(e) => { if (e.target === e.currentTarget) { stop(); onClose(); } }}
+      onClick={(e) => { if (e.target === e.currentTarget) { handleClose(); } }}
     >
       <div ref={modalRef} className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden">
         {/* Header */}
@@ -158,7 +167,7 @@ export default function EntryModal({
             )}
           </div>
           <button
-            onClick={() => { stop(); onClose(); }}
+            onClick={() => handleClose()}
             className="w-8 h-8 flex items-center justify-center rounded-full text-stone-300 hover:text-stone-500 hover:bg-stone-100 transition-all"
           >
             ✕

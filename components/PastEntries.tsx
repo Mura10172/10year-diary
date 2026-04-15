@@ -145,7 +145,7 @@ export default function PastEntries({
             {photoGrid}
           </button>
         ) : (
-          <div className="h-[8.5rem] bg-white/60 rounded-2xl border border-stone-50" />
+          <div className="h-[8.5rem] bg-white/40 rounded-2xl border border-stone-50" />
         )}
         {entry?.text2 && (
           <button

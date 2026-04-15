@@ -12,7 +12,7 @@ import ListView from "@/components/ListView";
 import SideMenu from "@/components/SideMenu";
 import SettingsView from "@/components/SettingsView";
 import DictionaryView from "@/components/DictionaryView";
-import { saveEntry, clearAllEntries } from "@/lib/storage";
+import { saveEntry, getEntry } from "@/lib/storage";
 import { Entry } from "@/types";
 
 function todayStr(): string {
@@ -76,8 +76,13 @@ export default function Home() {
         const res = await fetch("/api/entries");
         const data = await res.json();
         if (data.ok && Array.isArray(data.entries)) {
-          clearAllEntries();
-          data.entries.forEach((entry: Entry) => saveEntry(entry));
+          // マージ戦略: ローカルより新しいデータのみ上書き（ローカルの最新変更を保護）
+          data.entries.forEach((entry: Entry) => {
+            const local = getEntry(entry.date);
+            if (!local || entry.updatedAt > local.updatedAt) {
+              saveEntry(entry);
+            }
+          });
           setRefreshKey((k) => k + 1);
         }
       } catch {

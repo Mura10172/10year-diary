@@ -122,8 +122,7 @@ export default function EntryModal({
 
   const handleClose = () => {
     if (editing && (text1 !== entry.text || text2 !== (entry.text2 ?? ""))) {
-      if (!confirm("保存されていない変更があります。
-閉じてもよいですか？")) return;
+      if (!confirm("保存されていない変更があります。\n閉じてもよいですか？")) return;
     }
     stop();
     onClose();

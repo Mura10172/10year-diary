@@ -408,12 +408,21 @@ export default function TodayEntry({
         ) : (
           <div className="space-y-3">
             <p className="text-[11px] text-stone-300 tracking-widest">投稿１</p>
-            <p
-              className="text-sm text-stone-700 leading-[1.9] whitespace-pre-wrap cursor-pointer"
-              onClick={() => { if (editing2) { setText2(entry?.text2 ?? ""); setEditing2(false); speech2.stop(); } setEditing1(true); }}
-            >
-              {entry?.text}
-            </p>
+            {entry?.text ? (
+              <p
+                className="text-sm text-stone-700 leading-[1.9] whitespace-pre-wrap cursor-pointer"
+                onClick={() => { if (editing2) { setText2(entry?.text2 ?? ""); setEditing2(false); speech2.stop(); } setEditing1(true); }}
+              >
+                {entry.text}
+              </p>
+            ) : (
+              <button
+                onClick={() => { if (editing2) { setText2(entry?.text2 ?? ""); setEditing2(false); speech2.stop(); } setEditing1(true); }}
+                className="text-xs text-stone-300 hover:text-stone-400 transition-colors py-1"
+              >
+                ＋ 追加
+              </button>
+            )}
             <div className="flex justify-end pt-2 border-t border-stone-50">
               <button
                 onClick={handleStar1}

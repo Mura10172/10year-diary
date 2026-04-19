@@ -544,21 +544,38 @@ export default function TodayEntry({
             ))}
           </div>
         )}
-        <label className={`flex items-center gap-2 w-fit px-3 py-1.5 rounded-xl text-xs transition-all cursor-pointer ${uploading ? "bg-stone-50 text-stone-300" : "bg-stone-50 text-stone-400 hover:bg-stone-100 hover:text-stone-600"}`}>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-          {uploading ? "アップロード中..." : "写真を追加"}
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            className="hidden"
-            onChange={handlePhotoAdd}
-            disabled={uploading}
-          />
-        </label>
+        <div className="flex items-center gap-2">
+          <label className={`flex items-center gap-2 w-fit px-3 py-1.5 rounded-xl text-xs transition-all cursor-pointer ${uploading ? "bg-stone-50 text-stone-300" : "bg-stone-50 text-stone-400 hover:bg-stone-100 hover:text-stone-600"}`}>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            {uploading ? "アップロード中..." : "写真を追加"}
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={handlePhotoAdd}
+              disabled={uploading}
+            />
+          </label>
+          <label className={`flex items-center gap-2 w-fit px-3 py-1.5 rounded-xl text-xs transition-all cursor-pointer ${uploading ? "bg-stone-50 text-stone-300" : "bg-stone-50 text-stone-400 hover:bg-stone-100 hover:text-stone-600"}`}>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+              <circle cx="12" cy="13" r="4" />
+            </svg>
+            写真を撮る
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={handlePhotoAdd}
+              disabled={uploading}
+            />
+          </label>
+        </div>
       </div>
     </div>
   );

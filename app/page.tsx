@@ -78,7 +78,7 @@ export default function Home() {
 
   // --- PC: 起動時に自動ロード（タッチデバイス以外のみ） ---
   useEffect(() => {
-    const isTouch = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+    const isTouch = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
     if (!isTouch) {
       loadFromSheets();
     }

@@ -76,6 +76,15 @@ export default function Home() {
     }
   }, []);
 
+  // --- PC: 起動時に自動ロード（タッチデバイス以外のみ） ---
+  useEffect(() => {
+    const isTouch = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+    if (!isTouch) {
+      loadFromSheets();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // --- Pull-to-refresh touch handlers (home view only) ---
   useEffect(() => {
     if (view !== "home") return;

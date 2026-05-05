@@ -10,6 +10,7 @@ export function useSpeech() {
   const callbackRef = useRef<((text: string) => void) | null>(null);
   const stoppedRef = useRef(true);
   const restartTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingInterim = useRef(""); // セッション切れ時に失われるinterimを保持
 
   useEffect(() => {
     const SR =
@@ -20,7 +21,7 @@ export function useSpeech() {
 
     const rec = new SR();
     rec.lang = "ja-JP";
-    rec.continuous = true;     // 無音をまたいでセッション維持
+    rec.continuous = true;
     rec.interimResults = true;
     rec.maxAlternatives = 1;
 
@@ -33,37 +34,44 @@ export function useSpeech() {
       }
       if (final) {
         callbackRef.current?.(applyDictionary(final));
+        pendingInterim.current = "";
         setInterim("");
       } else {
+        pendingInterim.current = interimText;
         setInterim(interimText);
       }
     };
 
     rec.onend = () => {
+      // セッション終了時点でinterimが残っていれば確定テキストとして保存
+      if (pendingInterim.current) {
+        callbackRef.current?.(applyDictionary(pendingInterim.current));
+        pendingInterim.current = "";
+        setInterim("");
+      }
+
       if (stoppedRef.current) {
         setListening(false);
-        setInterim("");
         return;
       }
-      // ユーザーが停止していない場合は同インスタンスで再開
-      // 重複タイマーを防ぐためクリアしてから設定
+
+      // ユーザーが停止していない場合は即座に再開（50ms）
       if (restartTimer.current) clearTimeout(restartTimer.current);
       restartTimer.current = setTimeout(() => {
         if (!stoppedRef.current) {
           try { rec.start(); } catch {}
         }
-      }, 200);
+      }, 50);
     };
 
     rec.onerror = (e: any) => {
-      // これらはセッション終了後に onend で再開するので無視
       if (e.error === "no-speech") return;
       if (e.error === "aborted") return;
       if (e.error === "network") return;
-      // マイク不可・権限なし等は停止
       stoppedRef.current = true;
       setListening(false);
       setInterim("");
+      pendingInterim.current = "";
     };
 
     recRef.current = rec;
@@ -76,6 +84,7 @@ export function useSpeech() {
   const start = useCallback((onFinal: (text: string) => void) => {
     callbackRef.current = onFinal;
     stoppedRef.current = false;
+    pendingInterim.current = "";
     if (restartTimer.current) clearTimeout(restartTimer.current);
     try {
       recRef.current?.start();
@@ -89,6 +98,7 @@ export function useSpeech() {
     try { recRef.current?.stop(); } catch {}
     setListening(false);
     setInterim("");
+    pendingInterim.current = "";
   }, []);
 
   return { listening, interim, supported, start, stop };

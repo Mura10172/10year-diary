@@ -6,6 +6,7 @@ export function useSpeech() {
   const [listening, setListening] = useState(false);
   const [interim, setInterim] = useState("");
   const [supported, setSupported] = useState(false);
+  const SRClass = useRef<any>(null);
   const recRef = useRef<any>(null);
   const callbackRef = useRef<((text: string) => void) | null>(null);
   const stoppedRef = useRef(true);
@@ -15,17 +16,27 @@ export function useSpeech() {
       (window as any).SpeechRecognition ||
       (window as any).webkitSpeechRecognition;
     if (!SR) return;
+    SRClass.current = SR;
     setSupported(true);
+    return () => { try { recRef.current?.abort(); } catch {} };
+  }, []);
+
+  // セッションを新規作成して開始（iOS では同インスタンス再利用が不安定なため毎回生成）
+  const createAndStart = useCallback(() => {
+    const SR = SRClass.current;
+    if (!SR || stoppedRef.current) return;
+
+    try { recRef.current?.abort(); } catch {}
 
     const rec = new SR();
     rec.lang = "ja-JP";
-    rec.continuous = true;       // 無音の間も認識を継続
+    rec.continuous = true;    // 無音をまたいで継続
     rec.interimResults = true;
+    rec.maxAlternatives = 1;
 
     rec.onresult = (e: any) => {
       let final = "";
       let interimText = "";
-      // resultIndex から処理して重複を防ぐ
       for (let i = e.resultIndex; i < e.results.length; i++) {
         if (e.results[i].isFinal) final += e.results[i][0].transcript;
         else interimText += e.results[i][0].transcript;
@@ -39,9 +50,9 @@ export function useSpeech() {
     };
 
     rec.onend = () => {
-      // continuous=true でもブラウザが強制終了した場合に備えて再開
       if (!stoppedRef.current) {
-        try { rec.start(); } catch {}
+        // 新インスタンスで即再開（古いインスタンスの状態を引き継がない）
+        setTimeout(() => createAndStart(), 150);
       } else {
         setListening(false);
         setInterim("");
@@ -49,27 +60,25 @@ export function useSpeech() {
     };
 
     rec.onerror = (e: any) => {
-      if (e.error === "no-speech") return; // 無音は無視
-      if (e.error === "aborted") return;   // stop() によるものは無視
+      if (e.error === "no-speech") return;  // 無音は無視、onend で再開
+      if (e.error === "aborted") return;    // stop()/abort() 由来は無視
+      if (e.error === "network") return;    // ネットワークエラーは再開に任せる
+      // それ以外（not-allowed 等）は停止
       stoppedRef.current = true;
       setListening(false);
       setInterim("");
     };
 
     recRef.current = rec;
-    return () => {
-      try { rec.abort(); } catch {}
-    };
+    try { rec.start(); } catch {}
   }, []);
 
   const start = useCallback((onFinal: (text: string) => void) => {
     callbackRef.current = onFinal;
     stoppedRef.current = false;
-    try {
-      recRef.current?.start();
-      setListening(true);
-    } catch {}
-  }, []);
+    setListening(true);
+    createAndStart();
+  }, [createAndStart]);
 
   const stop = useCallback(() => {
     stoppedRef.current = true;

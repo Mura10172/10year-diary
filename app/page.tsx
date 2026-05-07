@@ -91,12 +91,9 @@ export default function Home() {
     }
   }, []);
 
-  // --- PC: 起動時に自動ロード（タッチデバイス以外のみ） ---
+  // --- 起動時に自動ロード（PC・携帯共通、マージ戦略なので安全） ---
   useEffect(() => {
-    const isTouch = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
-    if (!isTouch) {
-      loadFromSheets();
-    }
+    loadFromSheets();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

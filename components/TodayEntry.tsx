@@ -34,6 +34,8 @@ export default function TodayEntry({
   // Section 2 state
   const [text2, setText2] = useState("");
   const [editing2, setEditing2] = useState(false);
+  const editing1Ref = useRef(false);
+  const editing2Ref = useRef(false);
   const speech2 = useSpeech();
 
   // Photos state
@@ -47,14 +49,19 @@ export default function TodayEntry({
   const dragDeltaRef = useRef(0);
 
   useEffect(() => {
+    // 編集中はrefが最新値を保持
+    editing1Ref.current = editing1;
+    editing2Ref.current = editing2;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editing1, editing2]);
+  useEffect(() => {
     speech1.stop();
     speech2.stop();
     const e = getEntry(date) ?? null;
     setEntry(e);
-    setText1(e?.text ?? "");
-    setText2(e?.text2 ?? "");
-    setEditing1(false);
-    setEditing2(false);
+    // date変化時は常にリセット。refreshKeyのみの更新で編集中なら内容を保持
+    if (!editing1Ref.current) { setText1(e?.text ?? ""); setEditing1(false); }
+    if (!editing2Ref.current) { setText2(e?.text2 ?? ""); setEditing2(false); }
     setPhotos(e?.photos ?? []);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [date, refreshKey]);

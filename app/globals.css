@@ -109,6 +109,10 @@ body {
 }
 
 /* --- Apply CSS variables to Tailwind classes --- */
+html, body {
+  overscroll-behavior-y: none; /* ブラウザのネイティブ pull-to-refresh を無効化 */
+}
+
 body {
   background-color: var(--gbg) !important;
   color: var(--gt1);

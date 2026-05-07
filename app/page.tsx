@@ -73,10 +73,13 @@ export default function Home() {
         const localEntries = getAllEntries();
         const toPush = localEntries.filter((local) => {
           const sheets = sheetsMap.get(local.date);
-          return !sheets || local.updatedAt > sheets.updatedAt;
+          return !sheets || Number(local.updatedAt) > Number(sheets.updatedAt ?? 0);
         });
         if (toPush.length > 0) {
-          await Promise.all(toPush.map((e) => syncSaveAsync(e)));
+          console.log('[sync] pushing', toPush.length, 'local entries to Sheets');
+          const results = await Promise.all(toPush.map((e) => syncSaveAsync(e)));
+          const failed = results.filter(r => !r).length;
+          console.log('[sync] push done. success:', results.length - failed, 'failed:', failed);
         }
         setRefreshKey((k) => k + 1);
       }

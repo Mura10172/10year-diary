@@ -6,9 +6,22 @@ export function syncSave(entry: Entry): void {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action: "save", entry }),
-  }).catch(() => {
-    // Sheets連携が失敗してもアプリは正常動作
-  });
+  }).catch(() => {});
+}
+
+/** 保存時にGoogle Sheetsへ同期（結果を返す版） */
+export async function syncSaveAsync(entry: Entry): Promise<boolean> {
+  try {
+    const res = await fetch("/api/sync", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "save", entry }),
+    });
+    const data = await res.json();
+    return data.ok === true;
+  } catch {
+    return false;
+  }
 }
 
 /** 削除時にGoogle Sheetsから削除（fire-and-forget） */
@@ -17,7 +30,5 @@ export function syncDelete(date: string): void {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action: "delete", date }),
-  }).catch(() => {
-    // Sheets連携が失敗してもアプリは正常動作
-  });
+  }).catch(() => {});
 }

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useCallback, useEffect, useRef } from "react";
 import DateNav from "@/components/DateNav";
 import TodayEntry from "@/components/TodayEntry";
@@ -12,8 +12,9 @@ import ListView from "@/components/ListView";
 import SideMenu from "@/components/SideMenu";
 import SettingsView from "@/components/SettingsView";
 import DictionaryView from "@/components/DictionaryView";
-import { saveEntry, getEntry } from "@/lib/storage";
+import { saveEntry, getEntry, getAllEntries } from "@/lib/storage";
 import { Entry } from "@/types";
+import { syncSaveAsync } from "@/lib/syncToSheets";
 
 function todayStr(): string {
   const d = new Date();
@@ -60,12 +61,23 @@ export default function Home() {
       const res = await fetch("/api/entries");
       const data = await res.json();
       if (data.ok && Array.isArray(data.entries)) {
+        // Step1: Sheets -> Local（Sheetsが新しければ上書き）
+        const sheetsMap = new Map<string, Entry>(data.entries.map((e: Entry) => [e.date, e]));
         data.entries.forEach((entry: Entry) => {
           const local = getEntry(entry.date);
           if (!local || entry.updatedAt > local.updatedAt) {
             saveEntry(entry);
           }
         });
+        // Step2: Local -> Sheets（Localが新しいものをプッシュ）
+        const localEntries = getAllEntries();
+        const toPush = localEntries.filter((local) => {
+          const sheets = sheetsMap.get(local.date);
+          return !sheets || local.updatedAt > sheets.updatedAt;
+        });
+        if (toPush.length > 0) {
+          await Promise.all(toPush.map((e) => syncSaveAsync(e)));
+        }
         setRefreshKey((k) => k + 1);
       }
     } catch {

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { applyDictionary } from "@/lib/dictionary";
 
@@ -11,6 +11,9 @@ export function useSpeech() {
   const stoppedRef = useRef(true);
   const restartTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingInterim = useRef(""); // セッション切れ時に失われるinterimを保持
+  // 重複防止: 直前に確定したテキストと時刻を記録
+  const lastFinalText = useRef("");
+  const lastFinalTime = useRef(0);
 
   useEffect(() => {
     const SR =
@@ -25,6 +28,16 @@ export function useSpeech() {
     rec.interimResults = true;
     rec.maxAlternatives = 1;
 
+    // 重複チェック付きでfinalテキストを確定する
+    const commitFinal = (text: string) => {
+      const now = Date.now();
+      // 直前と同じテキストが2秒以内に来た場合は重複として無視
+      if (text === lastFinalText.current && now - lastFinalTime.current < 2000) return;
+      lastFinalText.current = text;
+      lastFinalTime.current = now;
+      callbackRef.current?.(applyDictionary(text));
+    };
+
     rec.onresult = (e: any) => {
       let final = "";
       let interimText = "";
@@ -33,7 +46,7 @@ export function useSpeech() {
         else interimText += e.results[i][0].transcript;
       }
       if (final) {
-        callbackRef.current?.(applyDictionary(final));
+        commitFinal(final);
         pendingInterim.current = "";
         setInterim("");
       } else {
@@ -45,7 +58,7 @@ export function useSpeech() {
     rec.onend = () => {
       // セッション終了時点でinterimが残っていれば確定テキストとして保存
       if (pendingInterim.current) {
-        callbackRef.current?.(applyDictionary(pendingInterim.current));
+        commitFinal(pendingInterim.current);
         pendingInterim.current = "";
         setInterim("");
       }
@@ -85,6 +98,8 @@ export function useSpeech() {
     callbackRef.current = onFinal;
     stoppedRef.current = false;
     pendingInterim.current = "";
+    lastFinalText.current = "";
+    lastFinalTime.current = 0;
     if (restartTimer.current) clearTimeout(restartTimer.current);
     try {
       recRef.current?.start();

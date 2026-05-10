@@ -12,10 +12,9 @@ export function useSpeech() {
   const restartTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingInterim = useRef("");
 
-  // Android対策:
-  // Androidは e.resultIndex=0 を常に返し、かつ「前回確定テキスト＋新テキスト」を
-  // 蓄積した文字列で送ってくる。prevFinal に前回処理した full text を保持し、
-  // 次のresultからそのprefixを除去することで新しい部分だけを取り出す。
+  // Android対策: 前回onresultで受け取ったfull textを保持。
+  // Androidは同じ認識区間を繰り返し送ってくる（前進・後退含む）ため、
+  // 双方向でprevFinalとの関係をチェックし重複を除去する。
   const prevFinal = useRef("");
 
   useEffect(() => {
@@ -35,30 +34,33 @@ export function useSpeech() {
       const trimmed = text.trim();
       if (!trimmed) return;
 
-      let toCommit = trimmed;
+      const prev = prevFinal.current;
 
-      if (prevFinal.current) {
-        if (trimmed === prevFinal.current) {
-          // 完全一致 = リプレイ → スキップ（prevFinalは更新しない）
+      if (prev) {
+        // 1. 完全一致 → リプレイ、スキップ
+        if (trimmed === prev) return;
+
+        // 2. prevFinalで始まっている → 新しい部分だけ抽出（前進）
+        if (trimmed.startsWith(prev)) {
+          const newPart = trimmed.slice(prev.length).trim();
+          if (!newPart) return;
+          prevFinal.current = trimmed;
+          callbackRef.current?.(applyDictionary(newPart));
           return;
         }
-        if (trimmed.startsWith(prevFinal.current)) {
-          // 前回テキストで始まっている → 新しい部分だけ抽出
-          toCommit = trimmed.slice(prevFinal.current.length).trim();
-          if (!toCommit) return;
-        }
+
+        // 3. prevFinalがtrimmedで始まっている → 逆行（既コミット範囲内）→ スキップ
+        if (prev.startsWith(trimmed)) return;
       }
 
-      // 今回の full text を記録（次回のprefix除去用）
+      // 4. 通常コミット（新しい内容）
       prevFinal.current = trimmed;
-      callbackRef.current?.(applyDictionary(toCommit));
+      callbackRef.current?.(applyDictionary(trimmed));
     };
 
     rec.onresult = (e: any) => {
       let final = "";
       let interimText = "";
-      // e.resultIndex はAndroidでは信頼できないが、prevFinalで重複を除去するので
-      // ここではブラウザの値をそのまま使う
       for (let i = e.resultIndex; i < e.results.length; i++) {
         if (e.results[i].isFinal) {
           final += e.results[i][0].transcript;

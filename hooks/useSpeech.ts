@@ -10,10 +10,11 @@ export function useSpeech() {
   const callbackRef = useRef<((text: string) => void) | null>(null);
   const stoppedRef = useRef(true);
   const restartTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendingInterim = useRef(""); // セッション切れ時に失われるinterimを保持
-  // 重複防止: 直前に確定したテキストと時刻を記録
-  const lastFinalText = useRef("");
-  const lastFinalTime = useRef(0);
+  const pendingInterim = useRef("");
+  // Androidリプレイ対策: onendでフラッシュした内容を記録し、
+  // 再起動後に同内容がonresultで来たら除去する
+  const flushedInterim = useRef("");
+  const flushedInterimTime = useRef(0);
 
   useEffect(() => {
     const SR =
@@ -28,14 +29,33 @@ export function useSpeech() {
     rec.interimResults = true;
     rec.maxAlternatives = 1;
 
-    // 重複チェック付きでfinalテキストを確定する
+    // finalテキストを確定する（重複除去付き）
     const commitFinal = (text: string) => {
+      const trimmed = text.trim();
+      if (!trimmed) return;
+
       const now = Date.now();
-      // 直前と同じテキストが2秒以内に来た場合は重複として無視
-      if (text === lastFinalText.current && now - lastFinalTime.current < 2000) return;
-      lastFinalText.current = text;
-      lastFinalTime.current = now;
-      callbackRef.current?.(applyDictionary(text));
+      const flushed = flushedInterim.current;
+      const age = now - flushedInterimTime.current;
+
+      if (flushed && age < 4000) {
+        // 完全一致 → スキップ
+        if (trimmed === flushed) {
+          flushedInterim.current = "";
+          return;
+        }
+        // flushedで始まっている → 新しい部分だけ取り出す（Androidリプレイ）
+        if (trimmed.startsWith(flushed)) {
+          const newPart = trimmed.slice(flushed.length).trim();
+          flushedInterim.current = "";
+          if (newPart) callbackRef.current?.(applyDictionary(newPart));
+          return;
+        }
+        // 一致しないなら通常処理
+        flushedInterim.current = "";
+      }
+
+      callbackRef.current?.(applyDictionary(trimmed));
     };
 
     rec.onresult = (e: any) => {
@@ -56,9 +76,14 @@ export function useSpeech() {
     };
 
     rec.onend = () => {
-      // セッション終了時点でinterimが残っていれば確定テキストとして保存
       if (pendingInterim.current) {
-        commitFinal(pendingInterim.current);
+        const text = pendingInterim.current.trim();
+        if (text) {
+          // フラッシュした内容を記録してから確定
+          flushedInterim.current = text;
+          flushedInterimTime.current = Date.now();
+          callbackRef.current?.(applyDictionary(text));
+        }
         pendingInterim.current = "";
         setInterim("");
       }
@@ -68,7 +93,6 @@ export function useSpeech() {
         return;
       }
 
-      // ユーザーが停止していない場合は即座に再開（50ms）
       if (restartTimer.current) clearTimeout(restartTimer.current);
       restartTimer.current = setTimeout(() => {
         if (!stoppedRef.current) {
@@ -98,8 +122,8 @@ export function useSpeech() {
     callbackRef.current = onFinal;
     stoppedRef.current = false;
     pendingInterim.current = "";
-    lastFinalText.current = "";
-    lastFinalTime.current = 0;
+    flushedInterim.current = "";
+    flushedInterimTime.current = 0;
     if (restartTimer.current) clearTimeout(restartTimer.current);
     try {
       recRef.current?.start();

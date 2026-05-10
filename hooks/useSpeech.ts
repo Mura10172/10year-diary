@@ -11,8 +11,10 @@ export function useSpeech() {
   const stoppedRef = useRef(true);
   const restartTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingInterim = useRef("");
-  // Androidリプレイ対策: onendでフラッシュした内容を記録し、
-  // 再起動後に同内容がonresultで来たら除去する
+  // Android では e.resultIndex が常に 0 を返すバグがある。
+  // 自前で「次に処理すべきインデックス」を管理して再処理を防ぐ。
+  const nextResultIdx = useRef(0);
+  // onend でフラッシュした内容を記録し、再起動後のリプレイを除去する
   const flushedInterim = useRef("");
   const flushedInterimTime = useRef(0);
 
@@ -29,29 +31,21 @@ export function useSpeech() {
     rec.interimResults = true;
     rec.maxAlternatives = 1;
 
-    // finalテキストを確定する（重複除去付き）
     const commitFinal = (text: string) => {
       const trimmed = text.trim();
       if (!trimmed) return;
 
+      // フラッシュしたinterimで始まっている場合は新しい部分だけ使う
       const now = Date.now();
-      const flushed = flushedInterim.current;
-      const age = now - flushedInterimTime.current;
-
-      if (flushed && age < 4000) {
-        // 完全一致 → スキップ
-        if (trimmed === flushed) {
-          flushedInterim.current = "";
-          return;
-        }
-        // flushedで始まっている → 新しい部分だけ取り出す（Androidリプレイ）
+      if (flushedInterim.current && now - flushedInterimTime.current < 4000) {
+        const flushed = flushedInterim.current;
+        if (trimmed === flushed) { flushedInterim.current = ""; return; }
         if (trimmed.startsWith(flushed)) {
           const newPart = trimmed.slice(flushed.length).trim();
           flushedInterim.current = "";
           if (newPart) callbackRef.current?.(applyDictionary(newPart));
           return;
         }
-        // 一致しないなら通常処理
         flushedInterim.current = "";
       }
 
@@ -61,10 +55,19 @@ export function useSpeech() {
     rec.onresult = (e: any) => {
       let final = "";
       let interimText = "";
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        if (e.results[i].isFinal) final += e.results[i][0].transcript;
-        else interimText += e.results[i][0].transcript;
+
+      // e.resultIndex は Android で信頼できないため、自前のインデックスと比較して大きい方を使う
+      const startIdx = Math.max(e.resultIndex, nextResultIdx.current);
+
+      for (let i = startIdx; i < e.results.length; i++) {
+        if (e.results[i].isFinal) {
+          final += e.results[i][0].transcript;
+          nextResultIdx.current = i + 1; // 処理済みとしてマーク
+        } else {
+          interimText += e.results[i][0].transcript;
+        }
       }
+
       if (final) {
         commitFinal(final);
         pendingInterim.current = "";
@@ -76,10 +79,10 @@ export function useSpeech() {
     };
 
     rec.onend = () => {
+      // セッション終了時にinterimが残っていれば確定
       if (pendingInterim.current) {
         const text = pendingInterim.current.trim();
         if (text) {
-          // フラッシュした内容を記録してから確定
           flushedInterim.current = text;
           flushedInterimTime.current = Date.now();
           callbackRef.current?.(applyDictionary(text));
@@ -87,6 +90,9 @@ export function useSpeech() {
         pendingInterim.current = "";
         setInterim("");
       }
+
+      // 新セッション開始のためインデックスをリセット
+      nextResultIdx.current = 0;
 
       if (stoppedRef.current) {
         setListening(false);
@@ -122,6 +128,7 @@ export function useSpeech() {
     callbackRef.current = onFinal;
     stoppedRef.current = false;
     pendingInterim.current = "";
+    nextResultIdx.current = 0;
     flushedInterim.current = "";
     flushedInterimTime.current = 0;
     if (restartTimer.current) clearTimeout(restartTimer.current);

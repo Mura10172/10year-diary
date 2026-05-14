@@ -156,7 +156,7 @@ export default function RecentPhotos({
       el.removeEventListener("touchend", onEnd);
       el.removeEventListener("touchcancel", onEnd);
     };
-  }, []);
+  }, [photos.length]);
 
   if (photos.length === 0) return null;
 

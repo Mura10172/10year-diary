@@ -43,7 +43,7 @@ export default function RecentPhotos({
     const today = todayStr();
     const entries = getAllEntries()
       .filter((e) => e.date <= today)
-      .sort((a, b) => b.date.localeCompare(a.date));
+      .sort((a, b) => b.date.localeCompare(a.date)); // newest first
 
     const collected: PhotoItem[] = [];
     for (const entry of entries) {
@@ -53,20 +53,26 @@ export default function RecentPhotos({
         }
       }
     }
+    // 配列を「古い→新しい」順に変更（左=最古、右=最新）
+    collected.reverse();
     setPhotos(collected);
-    setCurrentCol(0);
+    // 初期は右端3列（最新）を表示
+    const totalColsLocal = Math.ceil(collected.length / 2);
+    setCurrentCol(Math.max(0, totalColsLocal - 3));
   }, [refreshKey]);
 
-  // 2枚ずつ列にまとめる（上=新しい / 下=古い）
+  // 2枚ずつ列にまとめる
+  //   配列 = 古→新 なので、cols[i][0] が古、cols[i][1] が新（=列内：上=古、下=新）
   const cols: [PhotoItem, PhotoItem | null][] = [];
   for (let i = 0; i < photos.length; i += 2) {
     cols.push([photos[i], photos[i + 1] ?? null]);
   }
   const totalCols = cols.length;
 
-  // 右スワイプ = 過去（currentCol++）、左スワイプ = 未来（currentCol--）
-  const canOlder = currentCol < totalCols - 3;
-  const canNewer = currentCol > 0;
+  // 右スワイプ = 過去 = currentCol-- （配列左方向=古い方向）
+  // 左スワイプ = 未来 = currentCol++ （配列右方向=新しい方向）
+  const canOlder = currentCol > 0;
+  const canNewer = currentCol < totalCols - 3;
   const canOlderRef = useRef(canOlder);
   const canNewerRef = useRef(canNewer);
   useEffect(() => {
@@ -74,22 +80,16 @@ export default function RecentPhotos({
     canNewerRef.current = canNewer;
   }, [canOlder, canNewer]);
 
-  // ネイティブ touch ハンドラ + 直接 DOM 操作（React 再レンダリングを介さずスムーズに）
+  // ネイティブ touch + 直接 DOM 操作
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-
-    const applyStaticTransform = () => {
-      el.style.transition = "transform 0.3s ease";
-      el.style.transform = `translateX(-${currentColRef.current * COL_PCT}%)`;
-    };
 
     const onStart = (e: TouchEvent) => {
       touchStartX.current = e.touches[0].clientX;
       touchStartY.current = e.touches[0].clientY;
       isHorizontal.current = null;
       dragDeltaRef.current = 0;
-      // ドラッグ中はトランジション無効化
       el.style.transition = "none";
     };
 
@@ -98,7 +98,6 @@ export default function RecentPhotos({
       const dx = e.touches[0].clientX - touchStartX.current;
       const dy = e.touches[0].clientY - touchStartY.current;
 
-      // 最初の動きで横/縦を判定
       if (isHorizontal.current === null) {
         if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
           isHorizontal.current = Math.abs(dx) > Math.abs(dy);
@@ -109,12 +108,13 @@ export default function RecentPhotos({
       e.preventDefault();
 
       // 端でゴムバンド
+      // 右に引っ張る (dx>0) と過去方向 → canOlder=false ならゴム
+      // 左に引っ張る (dx<0) と未来方向 → canNewer=false ならゴム
       let delta = dx;
       if (dx > 0 && !canOlderRef.current) delta = dx * 0.2;
       else if (dx < 0 && !canNewerRef.current) delta = dx * 0.2;
       dragDeltaRef.current = delta;
 
-      // 直接 DOM 更新（毎フレーム React 再レンダリングしない）
       el.style.transform = `translateX(calc(-${currentColRef.current * COL_PCT}% + ${delta}px))`;
     };
 
@@ -122,23 +122,24 @@ export default function RecentPhotos({
       if (touchStartX.current === null) return;
       if (!isHorizontal.current) {
         touchStartX.current = null;
-        applyStaticTransform();
+        el.style.transition = "transform 0.3s ease";
+        el.style.transform = `translateX(-${currentColRef.current * COL_PCT}%)`;
         return;
       }
 
-      // 閾値は「列幅の半分」（=コンテナ幅の 1/6）
+      // 閾値 = 列幅の半分
       const colWidth = el.offsetWidth / 3;
       const threshold = colWidth / 2;
 
       let newCol = currentColRef.current;
-      if (dragDeltaRef.current > threshold && canOlderRef.current) newCol++;
-      else if (dragDeltaRef.current < -threshold && canNewerRef.current) newCol--;
+      // 右スワイプ (dragDelta>0) → 過去 → newCol--
+      if (dragDeltaRef.current > threshold && canOlderRef.current) newCol--;
+      // 左スワイプ (dragDelta<0) → 未来 → newCol++
+      else if (dragDeltaRef.current < -threshold && canNewerRef.current) newCol++;
 
-      // スナップアニメーション（DOM 経由）
       el.style.transition = "transform 0.3s ease";
       el.style.transform = `translateX(-${newCol * COL_PCT}%)`;
 
-      // React state も同期
       if (newCol !== currentColRef.current) {
         setCurrentCol(newCol);
       }
@@ -160,9 +161,9 @@ export default function RecentPhotos({
 
   if (photos.length === 0) return null;
 
-  // ドット：右端 = 最新（col 0）、左端 = 最古
+  // ドット：配列が古→新なので、自然順で「左=最古、右=最新」
   const numDots = Math.max(1, Math.ceil(totalCols / 3));
-  const activeDot = Math.floor(currentCol / 3);
+  const activeDot = Math.min(numDots - 1, Math.floor(currentCol / 3));
 
   return (
     <>
@@ -206,10 +207,9 @@ export default function RecentPhotos({
           ))}
         </div>
 
-        {/* ドット：右端 = 最新、左端 = 最古 */}
         {numDots > 1 && (
           <div className="flex justify-center gap-1 mt-2">
-            {Array.from({ length: numDots }, (_, i) => numDots - 1 - i).map((dotIdx) => (
+            {Array.from({ length: numDots }, (_, i) => i).map((dotIdx) => (
               <div
                 key={dotIdx}
                 className={`w-1.5 h-1.5 rounded-full transition-colors ${

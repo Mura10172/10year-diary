@@ -34,6 +34,8 @@ export default function RecentPhotos({
   const dragDeltaRef = useRef(0);
   const isHorizontal = useRef<boolean | null>(null);
   const currentColRef = useRef(0);
+  // 速度計算用: 直近サンプル {t, x}
+  const samplesRef = useRef<{ t: number; x: number }[]>([]);
 
   useEffect(() => {
     currentColRef.current = currentCol;
@@ -90,6 +92,7 @@ export default function RecentPhotos({
       touchStartY.current = e.touches[0].clientY;
       isHorizontal.current = null;
       dragDeltaRef.current = 0;
+      samplesRef.current = [{ t: performance.now(), x: e.touches[0].clientX }];
       el.style.transition = "none";
     };
 
@@ -115,6 +118,13 @@ export default function RecentPhotos({
       else if (dx < 0 && !canNewerRef.current) delta = dx * 0.2;
       dragDeltaRef.current = delta;
 
+      // 速度サンプル記録（直近100ms分のみ保持）
+      const now = performance.now();
+      samplesRef.current.push({ t: now, x: e.touches[0].clientX });
+      while (samplesRef.current.length > 1 && now - samplesRef.current[0].t > 100) {
+        samplesRef.current.shift();
+      }
+
       el.style.transform = `translateX(calc(-${currentColRef.current * COL_PCT}% + ${delta}px))`;
     };
 
@@ -127,15 +137,29 @@ export default function RecentPhotos({
         return;
       }
 
-      // 閾値 = 列幅の半分
       const colWidth = el.offsetWidth / 3;
-      const threshold = colWidth / 2;
 
-      let newCol = currentColRef.current;
-      // 右スワイプ (dragDelta>0) → 過去 → newCol--
-      if (dragDeltaRef.current > threshold && canOlderRef.current) newCol--;
-      // 左スワイプ (dragDelta<0) → 未来 → newCol++
-      else if (dragDeltaRef.current < -threshold && canNewerRef.current) newCol++;
+      // 速度（px/ms）を直近サンプルから計算
+      const samples = samplesRef.current;
+      let velocity = 0;
+      if (samples.length >= 2) {
+        const first = samples[0];
+        const last = samples[samples.length - 1];
+        const dt = last.t - first.t;
+        if (dt > 0) velocity = (last.x - first.x) / dt;
+      }
+
+      // 慣性: 速度に応じて追加距離 (px/ms * ms = px)
+      // 係数150ms ≒ 滑らかな短い慣性
+      const projected = dragDeltaRef.current + velocity * 150;
+
+      // 進む列数を四捨五入で決定（半分以上で次の列へ）
+      let cols = Math.round(projected / colWidth);
+      // 右スワイプ(正) → 過去 → newCol-- にしたいので符号反転
+      let newCol = currentColRef.current - cols;
+      // クランプ
+      const maxCol = Math.max(0, totalCols - 3);
+      newCol = Math.max(0, Math.min(maxCol, newCol));
 
       el.style.transition = "transform 0.3s ease";
       el.style.transform = `translateX(-${newCol * COL_PCT}%)`;

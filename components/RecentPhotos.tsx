@@ -22,8 +22,8 @@ export default function RecentPhotos({
   refreshKey: number;
   onOpenEntry: (date: string) => void;
 }) {
-  const [pages, setPages] = useState<PhotoItem[][]>([]);
-  const [pageIdx, setPageIdx] = useState(0);
+  const [photos, setPhotos] = useState<PhotoItem[]>([]);
+  const [currentCol, setCurrentCol] = useState(0);
   const [photoState, setPhotoState] = useState<PhotoItem | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [renderDelta, setRenderDelta] = useState(0);
@@ -48,20 +48,20 @@ export default function RecentPhotos({
         }
       }
     }
-
-    // 6枚ごとにページ分割
-    const grouped: PhotoItem[][] = [];
-    for (let i = 0; i < collected.length; i += 6) {
-      grouped.push(collected.slice(i, i + 6));
-    }
-    setPages(grouped);
-    setPageIdx(0);
+    setPhotos(collected);
+    setCurrentCol(0);
   }, [refreshKey]);
 
-  // canOlder: 右スワイプ → 過去 (pageIdx++)
-  // canNewer: 左スワイプ → 未来 (pageIdx--)
-  const canOlder = pageIdx < pages.length - 1;
-  const canNewer = pageIdx > 0;
+  // 2枚ずつ列にまとめる（上・下）
+  const cols: [PhotoItem, PhotoItem | null][] = [];
+  for (let i = 0; i < photos.length; i += 2) {
+    cols.push([photos[i], photos[i + 1] ?? null]);
+  }
+
+  const totalCols = cols.length;
+  // 3列表示。右スワイプ = 過去、左スワイプ = 未来
+  const canOlder = currentCol < totalCols - 3; // まだ右に列がある
+  const canNewer = currentCol > 0;             // 左（新しい方）に戻れる
 
   useEffect(() => {
     const el = containerRef.current;
@@ -80,7 +80,6 @@ export default function RecentPhotos({
       const dx = e.touches[0].clientX - touchStartX.current;
       const dy = e.touches[0].clientY - touchStartY.current;
 
-      // 最初の動きで横縦を判定
       if (isHorizontal.current === null) {
         if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
           isHorizontal.current = Math.abs(dx) > Math.abs(dy);
@@ -90,14 +89,9 @@ export default function RecentPhotos({
       if (!isHorizontal.current) return;
       e.preventDefault();
 
-      // 端でのゴムバンド
-      if (dx > 0 && !canOlder) {
-        dragDeltaRef.current = dx * 0.2;
-      } else if (dx < 0 && !canNewer) {
-        dragDeltaRef.current = dx * 0.2;
-      } else {
-        dragDeltaRef.current = dx;
-      }
+      if (dx > 0 && !canOlder) dragDeltaRef.current = dx * 0.2;
+      else if (dx < 0 && !canNewer) dragDeltaRef.current = dx * 0.2;
+      else dragDeltaRef.current = dx;
       setRenderDelta(dragDeltaRef.current);
     };
 
@@ -107,11 +101,8 @@ export default function RecentPhotos({
         return;
       }
       setIsAnimating(true);
-      if (dragDeltaRef.current > 50 && canOlder) {
-        setPageIdx((i) => i + 1); // 右スワイプ → 過去ページへ
-      } else if (dragDeltaRef.current < -50 && canNewer) {
-        setPageIdx((i) => i - 1); // 左スワイプ → 新しいページへ
-      }
+      if (dragDeltaRef.current > 50 && canOlder) setCurrentCol((i) => i + 1);
+      else if (dragDeltaRef.current < -50 && canNewer) setCurrentCol((i) => i - 1);
       dragDeltaRef.current = 0;
       setRenderDelta(0);
       touchStartX.current = null;
@@ -127,15 +118,18 @@ export default function RecentPhotos({
     };
   }, [canOlder, canNewer]);
 
-  if (pages.length === 0) return null;
+  if (photos.length === 0) return null;
 
-  // 全ページを横並びにして translateX でスライド（PastEntries 方式）
-  const translateX = `calc(-${pageIdx * 100}% + ${renderDelta}px)`;
+  const PCT = 100 / 3;
+  const translateX = `calc(-${currentCol * PCT}% + ${renderDelta}px)`;
+
+  // ドット：3列ごとに1つ。右端 = 最新（col0）、左端 = 最古
+  const numDots = Math.max(1, Math.ceil(totalCols / 3));
+  const activeDot = Math.floor(currentCol / 3);
 
   return (
     <>
       <section style={{ overflow: "hidden" }}>
-        {/* スライドコンテナ */}
         <div
           ref={containerRef}
           style={{
@@ -145,43 +139,44 @@ export default function RecentPhotos({
           }}
           onTransitionEnd={() => setIsAnimating(false)}
         >
-          {pages.map((photos, pi) => (
+          {cols.map(([top, bottom], ci) => (
             <div
-              key={pi}
+              key={ci}
               style={{
-                minWidth: "100%",
-                display: "grid",
-                gridTemplateColumns: "repeat(3, 1fr)",
-                gridTemplateRows: "repeat(2, 1fr)",
-                gridAutoFlow: "column",
+                minWidth: `${PCT}%`,
+                padding: "0 1.5px",
+                boxSizing: "border-box",
+                display: "flex",
+                flexDirection: "column",
                 gap: "3px",
               }}
             >
-              {photos.map((item, i) => (
+              <div
+                className="rounded-lg overflow-hidden cursor-pointer aspect-square"
+                onClick={() => setPhotoState(top)}
+              >
+                <img src={top.url} alt="" className="w-full h-full object-cover" />
+              </div>
+              {bottom && (
                 <div
-                  key={i}
                   className="rounded-lg overflow-hidden cursor-pointer aspect-square"
-                  onClick={() => setPhotoState(item)}
+                  onClick={() => setPhotoState(bottom)}
                 >
-                  <img
-                    src={item.url}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={bottom.url} alt="" className="w-full h-full object-cover" />
                 </div>
-              ))}
+              )}
             </div>
           ))}
         </div>
 
-        {/* ページインジケーター */}
-        {pages.length > 1 && (
+        {/* ドット：右端 = 最新、左端 = 最古 */}
+        {numDots > 1 && (
           <div className="flex justify-center gap-1 mt-2">
-            {pages.map((_, i) => (
+            {Array.from({ length: numDots }, (_, i) => numDots - 1 - i).map((dotIdx) => (
               <div
-                key={i}
+                key={dotIdx}
                 className={`w-1.5 h-1.5 rounded-full transition-colors ${
-                  i === pageIdx ? "bg-stone-400" : "bg-stone-200"
+                  dotIdx === activeDot ? "bg-stone-400" : "bg-stone-200"
                 }`}
               />
             ))}

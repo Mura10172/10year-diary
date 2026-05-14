@@ -12,6 +12,7 @@ import ListView from "@/components/ListView";
 import SideMenu from "@/components/SideMenu";
 import SettingsView from "@/components/SettingsView";
 import DictionaryView from "@/components/DictionaryView";
+import RecentPhotos from "@/components/RecentPhotos";
 import { saveEntry, getEntry, getAllEntries } from "@/lib/storage";
 import { Entry } from "@/types";
 import { syncSaveAsync } from "@/lib/syncToSheets";
@@ -261,6 +262,8 @@ export default function Home() {
               <TodayEntry date={date} onSaved={handleRefresh} refreshKey={refreshKey} onPrev={() => goTo(-1)} onNext={() => goTo(1)} startEditing={editTrigger} scrollTrigger={scrollTrigger} />
 
               <RecentEntries date={date} onSelect={handleSelect} refreshKey={refreshKey} />
+
+              <RecentPhotos refreshKey={refreshKey} onOpenEntry={handleSelect} />
 
               <MonthCalendars date={date} onSelect={handleSelect} onSelectEdit={handleSelectEdit} refreshKey={refreshKey} />
 

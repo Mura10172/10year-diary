@@ -42,15 +42,13 @@ export default function PhotoViewer({
       e.stopPropagation();
       e.preventDefault();
       const dx = e.touches[0].clientX - touchStartX.current;
-      if (dx > 0) {
-        dragXRef.current = dx;
-        setDragX(dx);
-      }
+      dragXRef.current = dx;
+      setDragX(dx);
     };
 
     const onEnd = (e: TouchEvent) => {
       e.stopPropagation();
-      if (dragXRef.current > 80) {
+      if (Math.abs(dragXRef.current) > 80) {
         onClose();
       } else {
         setDragX(0);
@@ -104,7 +102,7 @@ export default function PhotoViewer({
       style={{
         transform: `translateX(${dragX}px)`,
         transition: dragX === 0 ? "transform 0.25s ease" : "none",
-        opacity: 1 - dragX / 300,
+        opacity: 1 - Math.abs(dragX) / 300,
       }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >

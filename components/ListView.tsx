@@ -127,8 +127,8 @@ export default function ListView({
                         </div>
                       )}
 
-                      {/* 写真 */}
-                      {entry.photos && entry.photos.length > 0 && (
+                      {/* 写真（投稿2の一覧では非表示） */}
+                      {type !== "post2" && entry.photos && entry.photos.length > 0 && (
                         <div className="flex gap-2 mt-3">
                           {entry.photos.slice(0, 3).map((url, i) => (
                             <div

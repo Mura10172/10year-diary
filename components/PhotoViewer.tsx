@@ -27,6 +27,29 @@ export default function PhotoViewer({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
+  // フルスクリーン化（Chrome の URL バー等を隠す）
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const doc: any = document;
+    const req =
+      (el as any).requestFullscreen ||
+      (el as any).webkitRequestFullscreen ||
+      (el as any).webkitEnterFullscreen;
+    try {
+      req?.call(el);
+    } catch {}
+    return () => {
+      const exit =
+        doc.exitFullscreen ||
+        doc.webkitExitFullscreen ||
+        doc.webkitCancelFullScreen;
+      if (doc.fullscreenElement || doc.webkitFullscreenElement) {
+        try { exit?.call(doc); } catch {}
+      }
+    };
+  }, []);
+
   // ネイティブタッチハンドラ（stopPropagation + preventDefault で下層への伝播を遮断）
   useEffect(() => {
     const el = containerRef.current;

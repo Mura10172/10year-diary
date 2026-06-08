@@ -16,9 +16,19 @@ export default function PhotoViewer({
   onOpenEntry: () => void;
 }) {
   const [dragX, setDragX] = useState(0);
+  const [scale, setScale] = useState(1);
+  const [imgTx, setImgTx] = useState(0);
+  const [imgTy, setImgTy] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const imgWrapRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef(0);
   const dragXRef = useRef(0);
+  const scaleRef = useRef(1);
+  const txRef = useRef(0);
+  const tyRef = useRef(0);
+  const pinchStart = useRef<{ dist: number; scale: number; tx: number; ty: number; midX: number; midY: number } | null>(null);
+  const panStart = useRef<{ x: number; y: number; tx: number; ty: number } | null>(null);
+  const lastTapTime = useRef(0);
 
   // ESC キーで閉じる
   useEffect(() => {
@@ -50,43 +60,138 @@ export default function PhotoViewer({
     };
   }, []);
 
-  // ネイティブタッチハンドラ（stopPropagation + preventDefault で下層への伝播を遮断）
+  // ネイティブタッチハンドラ（ピンチズーム + パン + スワイプで閉じる + ダブルタップ）
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
+    const MIN_SCALE = 1;
+    const MAX_SCALE = 5;
+
+    const applyScaleTranslate = (s: number, tx: number, ty: number) => {
+      scaleRef.current = s;
+      txRef.current = tx;
+      tyRef.current = ty;
+      setScale(s);
+      setImgTx(tx);
+      setImgTy(ty);
+    };
+
     const onStart = (e: TouchEvent) => {
       e.stopPropagation();
-      touchStartX.current = e.touches[0].clientX;
-      dragXRef.current = 0;
+      if (e.touches.length >= 2) {
+        // ピンチ開始
+        const t1 = e.touches[0];
+        const t2 = e.touches[1];
+        const dx = t2.clientX - t1.clientX;
+        const dy = t2.clientY - t1.clientY;
+        pinchStart.current = {
+          dist: Math.hypot(dx, dy),
+          scale: scaleRef.current,
+          tx: txRef.current,
+          ty: tyRef.current,
+          midX: (t1.clientX + t2.clientX) / 2,
+          midY: (t1.clientY + t2.clientY) / 2,
+        };
+        panStart.current = null;
+        touchStartX.current = 0;
+        dragXRef.current = 0;
+        setDragX(0);
+      } else if (e.touches.length === 1) {
+        // ダブルタップ判定
+        const now = Date.now();
+        if (now - lastTapTime.current < 300) {
+          // ダブルタップ → ズームトグル
+          if (scaleRef.current > 1) {
+            applyScaleTranslate(1, 0, 0);
+          } else {
+            applyScaleTranslate(2, 0, 0);
+          }
+          lastTapTime.current = 0;
+          return;
+        }
+        lastTapTime.current = now;
+
+        if (scaleRef.current > 1) {
+          // パン開始
+          panStart.current = {
+            x: e.touches[0].clientX,
+            y: e.touches[0].clientY,
+            tx: txRef.current,
+            ty: tyRef.current,
+          };
+        } else {
+          // スワイプで閉じる
+          touchStartX.current = e.touches[0].clientX;
+          dragXRef.current = 0;
+        }
+      }
     };
 
     const onMove = (e: TouchEvent) => {
       e.stopPropagation();
-      e.preventDefault();
-      const dx = e.touches[0].clientX - touchStartX.current;
-      dragXRef.current = dx;
-      setDragX(dx);
+      if (pinchStart.current && e.touches.length >= 2) {
+        e.preventDefault();
+        const t1 = e.touches[0];
+        const t2 = e.touches[1];
+        const dx = t2.clientX - t1.clientX;
+        const dy = t2.clientY - t1.clientY;
+        const dist = Math.hypot(dx, dy);
+        const ratio = dist / pinchStart.current.dist;
+        const newScale = Math.max(MIN_SCALE * 0.5, Math.min(MAX_SCALE, pinchStart.current.scale * ratio));
+        applyScaleTranslate(newScale, pinchStart.current.tx, pinchStart.current.ty);
+        return;
+      }
+      if (panStart.current && e.touches.length === 1) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - panStart.current.x;
+        const dy = e.touches[0].clientY - panStart.current.y;
+        applyScaleTranslate(scaleRef.current, panStart.current.tx + dx, panStart.current.ty + dy);
+        return;
+      }
+      if (touchStartX.current !== 0 && e.touches.length === 1 && scaleRef.current === 1) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - touchStartX.current;
+        dragXRef.current = dx;
+        setDragX(dx);
+      }
     };
 
     const onEnd = (e: TouchEvent) => {
       e.stopPropagation();
-      if (Math.abs(dragXRef.current) > 80) {
-        onClose();
-      } else {
-        setDragX(0);
-        dragXRef.current = 0;
+      // 1本以下になったらピンチ終了
+      if (e.touches.length < 2) {
+        pinchStart.current = null;
+      }
+      // 全部離れたら判定
+      if (e.touches.length === 0) {
+        panStart.current = null;
+
+        // スケール 1 未満なら復帰
+        if (scaleRef.current < 1) {
+          applyScaleTranslate(1, 0, 0);
+        }
+        // スワイプで閉じる判定（スケール 1 のときのみ）
+        if (scaleRef.current === 1 && Math.abs(dragXRef.current) > 80) {
+          onClose();
+        } else if (scaleRef.current === 1) {
+          setDragX(0);
+          dragXRef.current = 0;
+        }
+        touchStartX.current = 0;
       }
     };
 
     el.addEventListener("touchstart", onStart, { passive: true });
     el.addEventListener("touchmove", onMove, { passive: false });
     el.addEventListener("touchend", onEnd, { passive: true });
+    el.addEventListener("touchcancel", onEnd, { passive: true });
 
     return () => {
       el.removeEventListener("touchstart", onStart);
       el.removeEventListener("touchmove", onMove);
       el.removeEventListener("touchend", onEnd);
+      el.removeEventListener("touchcancel", onEnd);
     };
   }, [onClose]);
 
@@ -140,11 +245,18 @@ export default function PhotoViewer({
       </div>
 
       {/* Image */}
-      <div className="flex-1 flex items-center justify-center px-4 overflow-hidden landscape:px-0">
+      <div ref={imgWrapRef} className="flex-1 flex items-center justify-center px-4 overflow-hidden landscape:px-0">
         <img
           src={url}
           alt="写真"
-          className="max-w-full max-h-full object-contain rounded-lg landscape:rounded-none"
+          draggable={false}
+          style={{
+            transform: `translate(${imgTx}px, ${imgTy}px) scale(${scale})`,
+            transition: pinchStart.current || panStart.current ? "none" : "transform 0.2s ease",
+            transformOrigin: "center center",
+            touchAction: "none",
+          }}
+          className="max-w-full max-h-full object-contain rounded-lg landscape:rounded-none select-none"
         />
       </div>
 

@@ -152,6 +152,7 @@ export default function ListView({
       {selected && (
         <EntryModal
           entry={selected}
+          post2First={type === "post2"}
           onClose={() => {
             setSelected(null);
             onRefresh?.();

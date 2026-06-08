@@ -11,9 +11,11 @@ import PhotoViewer from "@/components/PhotoViewer";
 export default function EntryModal({
   entry: initialEntry,
   onClose,
+  post2First = false,
 }: {
   entry: Entry;
   onClose: () => void;
+  post2First?: boolean;
 }) {
   const [entry, setEntry] = useState(initialEntry);
   const [editing, setEditing] = useState(false);
@@ -176,59 +178,77 @@ export default function EntryModal({
         {/* Body */}
         <div className="px-6 py-5 max-h-[60vh] overflow-y-auto space-y-4">
           {editing ? (
-            <>
-              <div>
-                <p className="text-[11px] text-stone-300 tracking-widest mb-2">投稿１</p>
-                <textarea
-                  value={text1}
-                  onChange={(e) => setText1(e.target.value)}
-                  ref={textarea1Ref}
-                  style={{ overflow: "hidden" }}
-                  className="w-full min-h-[8rem] text-sm text-stone-700 leading-[1.9] resize-none outline-none"
-                />
-                {listening && interim && (
-                  <p className="text-xs text-stone-300 italic mt-1">{interim}</p>
-                )}
-              </div>
-              <div className="h-px bg-stone-50" />
-              <div>
-                <p className="text-[11px] text-stone-300 tracking-widest mb-2">投稿２</p>
-                <textarea
-                  value={text2}
-                  onChange={(e) => setText2(e.target.value)}
-                  placeholder="その他..."
-                  ref={textarea2Ref}
-                  style={{ overflow: "hidden" }}
-                  className="w-full min-h-[8rem] text-sm text-stone-600 leading-[1.9] resize-none outline-none placeholder-stone-200"
-                />
-              </div>
-            </>
-          ) : (
-            <>
-              <div>
-                <p className="text-[11px] text-stone-300 tracking-widest mb-2">投稿１</p>
-                <p
-                  className="text-sm text-stone-700 leading-[1.9] whitespace-pre-wrap cursor-pointer"
-                  onClick={() => { setFocusField("text1"); setEditing(true); }}
-                >
-                  {entry.text}
-                </p>
-              </div>
-              {entry.text2 && (
+            (() => {
+              const editPost1 = (
+                <div key="edit1">
+                  <p className="text-[11px] text-stone-300 tracking-widest mb-2">投稿１</p>
+                  <textarea
+                    value={text1}
+                    onChange={(e) => setText1(e.target.value)}
+                    ref={textarea1Ref}
+                    style={{ overflow: "hidden" }}
+                    className="w-full min-h-[8rem] text-sm text-stone-700 leading-[1.9] resize-none outline-none"
+                  />
+                  {listening && interim && (
+                    <p className="text-xs text-stone-300 italic mt-1">{interim}</p>
+                  )}
+                </div>
+              );
+              const editPost2 = (
+                <div key="edit2">
+                  <p className="text-[11px] text-stone-300 tracking-widest mb-2">投稿２</p>
+                  <textarea
+                    value={text2}
+                    onChange={(e) => setText2(e.target.value)}
+                    placeholder="その他..."
+                    ref={textarea2Ref}
+                    style={{ overflow: "hidden" }}
+                    className="w-full min-h-[8rem] text-sm text-stone-600 leading-[1.9] resize-none outline-none placeholder-stone-200"
+                  />
+                </div>
+              );
+              return (
                 <>
+                  {post2First ? editPost2 : editPost1}
                   <div className="h-px bg-stone-50" />
-                  <div>
-                    <p className="text-[11px] text-stone-300 tracking-widest mb-2">投稿２</p>
-                    <p
-                      className="text-sm text-stone-600 leading-[1.9] whitespace-pre-wrap cursor-pointer"
-                      onClick={() => { setFocusField("text2"); setEditing(true); }}
-                    >
-                      {entry.text2}
-                    </p>
-                  </div>
+                  {post2First ? editPost1 : editPost2}
                 </>
-              )}
-            </>
+              );
+            })()
+          ) : (
+            (() => {
+              const viewPost1 = entry.text ? (
+                <div key="view1">
+                  <p className="text-[11px] text-stone-300 tracking-widest mb-2">投稿１</p>
+                  <p
+                    className="text-sm text-stone-700 leading-[1.9] whitespace-pre-wrap cursor-pointer"
+                    onClick={() => { setFocusField("text1"); setEditing(true); }}
+                  >
+                    {entry.text}
+                  </p>
+                </div>
+              ) : null;
+              const viewPost2 = entry.text2 ? (
+                <div key="view2">
+                  <p className="text-[11px] text-stone-300 tracking-widest mb-2">投稿２</p>
+                  <p
+                    className="text-sm text-stone-600 leading-[1.9] whitespace-pre-wrap cursor-pointer"
+                    onClick={() => { setFocusField("text2"); setEditing(true); }}
+                  >
+                    {entry.text2}
+                  </p>
+                </div>
+              ) : null;
+              const first = post2First ? viewPost2 : viewPost1;
+              const second = post2First ? viewPost1 : viewPost2;
+              return (
+                <>
+                  {first}
+                  {first && second && <div className="h-px bg-stone-50" />}
+                  {second}
+                </>
+              );
+            })()
           )}
           {/* Photos */}
           {!editing && entry.photos && entry.photos.length > 0 && (

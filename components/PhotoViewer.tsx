@@ -8,12 +8,16 @@ export default function PhotoViewer({
   onClose,
   onDelete,
   onOpenEntry,
+  onPrev,
+  onNext,
 }: {
   url: string;
   entry: Entry;
   onClose: () => void;
   onDelete: (url: string) => void;
   onOpenEntry: () => void;
+  onPrev?: () => void; // ＜: 次に古い写真
+  onNext?: () => void; // ＞: 次に新しい写真
 }) {
   const [dragX, setDragX] = useState(0);
   const [scale, setScale] = useState(1);
@@ -30,12 +34,26 @@ export default function PhotoViewer({
   const panStart = useRef<{ x: number; y: number; tx: number; ty: number } | null>(null);
   const lastTapTime = useRef(0);
 
-  // ESC キーで閉じる
+  // ESC キーで閉じる / 矢印キーで前後の写真へ
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      else if (e.key === "ArrowLeft" && onPrev) onPrev();
+      else if (e.key === "ArrowRight" && onNext) onNext();
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, [onClose, onPrev, onNext]);
+
+  // URL が変わったら zoom/pan をリセット
+  useEffect(() => {
+    scaleRef.current = 1;
+    txRef.current = 0;
+    tyRef.current = 0;
+    setScale(1);
+    setImgTx(0);
+    setImgTy(0);
+  }, [url]);
 
   // フルスクリーン化（Chrome の URL バー等を隠す）
   useEffect(() => {
@@ -234,6 +252,27 @@ export default function PhotoViewer({
       }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
+      {/* ＜ 前の写真（古い方向）— landscape のみ */}
+      {onPrev && (
+        <button
+          onClick={onPrev}
+          aria-label="前の写真"
+          className="hidden landscape:flex absolute left-2 top-1/2 -translate-y-1/2 w-12 h-12 items-center justify-center rounded-full bg-black/40 text-white/80 hover:bg-black/60 hover:text-white transition-all z-10 text-2xl"
+        >
+          ‹
+        </button>
+      )}
+      {/* ＞ 次の写真（新しい方向）— landscape のみ */}
+      {onNext && (
+        <button
+          onClick={onNext}
+          aria-label="次の写真"
+          className="hidden landscape:flex absolute right-2 top-1/2 -translate-y-1/2 w-12 h-12 items-center justify-center rounded-full bg-black/40 text-white/80 hover:bg-black/60 hover:text-white transition-all z-10 text-2xl"
+        >
+          ›
+        </button>
+      )}
+
       {/* Close button (横向き時は absolute で浮かせる) */}
       <div className="flex justify-end p-4 landscape:absolute landscape:top-0 landscape:right-0 landscape:p-2 landscape:z-10">
         <button

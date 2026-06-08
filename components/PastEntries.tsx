@@ -225,15 +225,23 @@ export default function PastEntries({
         />
       )}
 
-      {photoState && (
-        <PhotoViewer
-          url={photoState.url}
-          entry={photoState.entry}
-          onClose={() => setPhotoState(null)}
-          onDelete={() => {}}
-          onOpenEntry={() => { setPhotoState(null); setSelected(photoState.entry); }}
-        />
-      )}
+      {photoState && (() => {
+        const ps = photoState.entry.photos ?? [];
+        const idx = ps.indexOf(photoState.url);
+        const hasPrev = idx > 0;
+        const hasNext = idx >= 0 && idx < ps.length - 1;
+        return (
+          <PhotoViewer
+            url={photoState.url}
+            entry={photoState.entry}
+            onClose={() => setPhotoState(null)}
+            onDelete={() => {}}
+            onOpenEntry={() => { setPhotoState(null); setSelected(photoState.entry); }}
+            onPrev={hasPrev ? () => setPhotoState({ url: ps[idx - 1], entry: photoState.entry }) : undefined}
+            onNext={hasNext ? () => setPhotoState({ url: ps[idx + 1], entry: photoState.entry }) : undefined}
+          />
+        );
+      })()}
     </>
   );
 }

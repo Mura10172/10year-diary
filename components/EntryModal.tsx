@@ -334,15 +334,23 @@ export default function EntryModal({
           )}
         </div>
       </div>
-    {viewingPhoto && (
-      <PhotoViewer
-        url={viewingPhoto}
-        entry={entry}
-        onClose={() => setViewingPhoto(null)}
-        onDelete={handlePhotoDelete}
-        onOpenEntry={() => setViewingPhoto(null)}
-      />
-    )}
+    {viewingPhoto && (() => {
+      const photos = entry.photos ?? [];
+      const idx = photos.indexOf(viewingPhoto);
+      const hasPrev = idx > 0;
+      const hasNext = idx >= 0 && idx < photos.length - 1;
+      return (
+        <PhotoViewer
+          url={viewingPhoto}
+          entry={entry}
+          onClose={() => setViewingPhoto(null)}
+          onDelete={handlePhotoDelete}
+          onOpenEntry={() => setViewingPhoto(null)}
+          onPrev={hasPrev ? () => setViewingPhoto(photos[idx - 1]) : undefined}
+          onNext={hasNext ? () => setViewingPhoto(photos[idx + 1]) : undefined}
+        />
+      );
+    })()}
     </div>
   );
 }

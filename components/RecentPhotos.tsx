@@ -245,18 +245,26 @@ export default function RecentPhotos({
         )}
       </section>
 
-      {photoState && (
-        <PhotoViewer
-          url={photoState.url}
-          entry={photoState.entry}
-          onClose={() => setPhotoState(null)}
-          onDelete={() => {}}
-          onOpenEntry={() => {
-            setPhotoState(null);
-            onOpenEntry(photoState.entry.date);
-          }}
-        />
-      )}
+      {photoState && (() => {
+        // 配列は古→新。＜=次に古い=index--、＞=次に新しい=index++
+        const idx = photos.findIndex((p) => p.url === photoState.url && p.entry.date === photoState.entry.date);
+        const hasPrev = idx > 0;
+        const hasNext = idx >= 0 && idx < photos.length - 1;
+        return (
+          <PhotoViewer
+            url={photoState.url}
+            entry={photoState.entry}
+            onClose={() => setPhotoState(null)}
+            onDelete={() => {}}
+            onOpenEntry={() => {
+              setPhotoState(null);
+              onOpenEntry(photoState.entry.date);
+            }}
+            onPrev={hasPrev ? () => setPhotoState(photos[idx - 1]) : undefined}
+            onNext={hasNext ? () => setPhotoState(photos[idx + 1]) : undefined}
+          />
+        );
+      })()}
     </>
   );
 }

@@ -257,7 +257,7 @@ export default function PhotoViewer({
         <button
           onClick={onPrev}
           aria-label="前の写真"
-          className="hidden landscape:flex absolute left-2 top-1/2 -translate-y-1/2 w-12 h-12 items-center justify-center rounded-full bg-black/40 text-white/80 hover:bg-black/60 hover:text-white transition-all z-10 text-2xl"
+          className="hidden landscape:flex absolute left-2 top-1/2 -translate-y-1/2 w-24 h-24 items-center justify-center rounded-full bg-black/40 text-white/80 hover:bg-black/60 hover:text-white transition-all z-10 text-5xl"
         >
           ‹
         </button>
@@ -267,7 +267,7 @@ export default function PhotoViewer({
         <button
           onClick={onNext}
           aria-label="次の写真"
-          className="hidden landscape:flex absolute right-2 top-1/2 -translate-y-1/2 w-12 h-12 items-center justify-center rounded-full bg-black/40 text-white/80 hover:bg-black/60 hover:text-white transition-all z-10 text-2xl"
+          className="hidden landscape:flex absolute right-2 top-1/2 -translate-y-1/2 w-24 h-24 items-center justify-center rounded-full bg-black/40 text-white/80 hover:bg-black/60 hover:text-white transition-all z-10 text-5xl"
         >
           ›
         </button>

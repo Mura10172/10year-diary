@@ -106,8 +106,8 @@ export default function PhotoViewer({
       }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      {/* Close button */}
-      <div className="flex justify-end p-4">
+      {/* Close button (横向き時は absolute で浮かせる) */}
+      <div className="flex justify-end p-4 landscape:absolute landscape:top-0 landscape:right-0 landscape:p-2 landscape:z-10">
         <button
           onClick={onClose}
           className="w-9 h-9 flex items-center justify-center text-white/70 hover:text-white transition-colors"
@@ -117,16 +117,16 @@ export default function PhotoViewer({
       </div>
 
       {/* Image */}
-      <div className="flex-1 flex items-center justify-center px-4 overflow-hidden">
+      <div className="flex-1 flex items-center justify-center px-4 overflow-hidden landscape:px-0">
         <img
           src={url}
           alt="写真"
-          className="max-w-full max-h-full object-contain rounded-lg"
+          className="max-w-full max-h-full object-contain rounded-lg landscape:rounded-none"
         />
       </div>
 
-      {/* Action buttons */}
-      <div className="px-6 pb-10 pt-5 flex justify-around">
+      {/* Action buttons (横向き時は非表示) */}
+      <div className="px-6 pb-10 pt-5 flex justify-around landscape:hidden">
         <button
           onClick={handleShare}
           className="flex flex-col items-center gap-1.5 text-white/80 hover:text-white transition-colors"

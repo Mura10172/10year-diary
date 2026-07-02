@@ -27,6 +27,7 @@ export default function EntryModal({
   const modalRef = useRef<HTMLDivElement>(null);
   const textarea1Ref = useRef<HTMLTextAreaElement>(null);
   const textarea2Ref = useRef<HTMLTextAreaElement>(null);
+  const handleCloseRef = useRef<() => void>(() => {});
 
   const autoResize = (el: HTMLTextAreaElement | null) => {
     if (!el) return;
@@ -56,6 +57,24 @@ export default function EntryModal({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose, stop]);
+
+  // Android の戻るジェスチャ/ボタンでモーダルを閉じる（アプリごと閉じないように）
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    history.pushState({ __modal: "entry" }, "");
+    let popped = false;
+    const onPop = () => {
+      popped = true;
+      handleCloseRef.current();
+    };
+    window.addEventListener("popstate", onPop);
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      if (!popped && (history.state as any)?.__modal === "entry") {
+        history.back();
+      }
+    };
+  }, []);
 
   // 左右スワイプでモーダルを閉じる（ビューモード時のみ）
   useEffect(() => {
@@ -124,11 +143,19 @@ export default function EntryModal({
 
   const handleClose = () => {
     if (editing && (text1 !== entry.text || text2 !== (entry.text2 ?? ""))) {
-      if (!confirm("保存されていない変更があります。\n閉じてもよいですか？")) return;
+      if (!confirm("保存されていない変更があります。\n閉じてもよいですか？")) {
+        // popstate 由来でキャンセルされた場合、pushState を戻して履歴整合性を保つ
+        if ((history.state as any)?.__modal !== "entry") {
+          history.pushState({ __modal: "entry" }, "");
+        }
+        return;
+      }
     }
     stop();
     onClose();
   };
+  // 常に最新の handleClose を ref に反映（popstate ハンドラで参照）
+  handleCloseRef.current = handleClose;
 
   const handleCancelEdit = () => {
     setText1(entry.text);
@@ -153,7 +180,7 @@ export default function EntryModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/25 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black/25 backdrop-blur-sm z-50 flex items-center justify-center px-8 py-4"
       onClick={(e) => { if (e.target === e.currentTarget) { handleClose(); } }}
     >
       <div ref={modalRef} className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden">

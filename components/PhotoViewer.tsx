@@ -55,6 +55,24 @@ export default function PhotoViewer({
     setImgTy(0);
   }, [url]);
 
+  // Android の戻るジェスチャ/ボタンで写真ビューを閉じる（アプリごと閉じないように）
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    history.pushState({ __modal: "photo" }, "");
+    let popped = false;
+    const onPop = () => {
+      popped = true;
+      onClose();
+    };
+    window.addEventListener("popstate", onPop);
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      if (!popped && (history.state as any)?.__modal === "photo") {
+        history.back();
+      }
+    };
+  }, [onClose]);
+
   // フルスクリーン化（Chrome の URL バー等を隠す）
   useEffect(() => {
     const el = containerRef.current;
